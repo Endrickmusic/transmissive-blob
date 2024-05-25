@@ -5,6 +5,8 @@ uniform float progress;
 uniform sampler2D texture01;
 uniform vec4 uResolution;
 uniform float dispersionOffset;
+uniform float divideFactor;
+uniform int count;
 
 varying vec2 vUv;
 varying vec3 vPosition;
@@ -38,13 +40,13 @@ float PI = 3.1415926;
 	
 	float getDist(vec3 p) {
 		float final = MAX_DIST;
-		float uTime = uTime; 
+		float uTime = uTime * 0.5; 
 		p = p - vec3(0.,.5, 5.);
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < count; i++) {
 			float iF = float(i);
 			float fi = iF + floor(iF / 5.);
 			vec3 pos = p;
-			pos.xy += vec2(sin(uTime + fi), cos(uTime + fi * 2.)) * 0.5;
+			pos.xy += vec2(sin(uTime + fi * 3.), cos(uTime + fi * 2.)) * divideFactor;
 			pos.z += sin(uTime * cos(float(i * 4))) * 0.2;
 			float r = sin(fi + 1.) * .25;
 			float n = min(sin(pos.z * iF * 5.), cos(pos.x * pos.y * iF * 10.)) * 0.1;
@@ -124,13 +126,17 @@ float PI = 3.1415926;
 		vec3 p = ro + rd * d;
 		vec3 n = normals(p, 0.03);
 		float dif = diffuse(p, n, ld); 
+		// fresnel
 		float fresnel = smoothstep(0.5, 0.3, dot(-rd, n));
+		// oil
 		vec3 oil = vec3(noise(n.xy * 2.7), noise(n.xy * 3.), noise(n.xy * 3.3)); 
 		
 		vec2 camUV = vUv;
 		vec4 cam1 = texture2D(texture01, camUV);
 		camUV += n.xy * 0.05 * dif;
 		vec3 cam2 = blur(texture01, camUV, 1./uResolution.xy).xyz * 0.8;
+		
+		// dispersion
 		vec3 dispersion = vec3(0.);
 		dispersion.r = texture2D(texture01, vec2(camUV.x - n.x * dispersionOffset, camUV.y)).r;
 		dispersion.b = texture2D(texture01, vec2(camUV.x + n.y * dispersionOffset, camUV.y)).b;

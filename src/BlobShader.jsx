@@ -14,7 +14,7 @@ export default function Shader() {
   const viewport = useThree((state) => state.viewport)
   const scene = useThree((state) => state.scene)
 
-  const { dispersionOffset, speed } = useControls({
+  const { dispersionOffset, speed, divideFactor, count } = useControls({
     dispersionOffset: {
       value: 0.0095,
       min: 0.001,
@@ -27,6 +27,18 @@ export default function Shader() {
       max: 3.0,
       step: 0.01,
     },
+    divideFactor: {
+      value: 0.5,
+      min: 0.01,
+      max: 1.0,
+      step: 0.01,
+    },
+    count: {
+      value: 3,
+      min: 1,
+      max: 20,
+      step: 1,
+    },
   })
 
   useFrame((state) => {
@@ -35,6 +47,8 @@ export default function Shader() {
     // start from 20 to skip first 20 seconds ( optional )
     meshRef.current.material.uniforms.uTime.value = time * speed
     meshRef.current.material.uniforms.dispersionOffset.value = dispersionOffset
+    meshRef.current.material.uniforms.divideFactor.value = divideFactor
+    meshRef.current.material.uniforms.count.value = count
 
     // Tie lens to the pointer
     // getCurrentViewport gives us the width & height that would fill the screen in threejs units
@@ -73,6 +87,14 @@ export default function Shader() {
       dispersionOffset: {
         type: "f",
         value: dispersionOffset,
+      },
+      divideFactor: {
+        type: "f",
+        value: divideFactor,
+      },
+      count: {
+        type: "i",
+        value: count,
       },
     }),
     [viewport.width, viewport.height, buffer.texture]
