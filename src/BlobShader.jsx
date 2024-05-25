@@ -1,6 +1,7 @@
 import { useTexture, useFBO } from "@react-three/drei"
 import { useFrame, useThree } from "@react-three/fiber"
 import { useRef, useMemo } from "react"
+import { useControls } from "leva"
 
 import vertexShader from "./shaders/vertexShader.js"
 import fragmentShader from "./shaders/fragmentShader.js"
@@ -13,11 +14,21 @@ export default function Shader() {
   const viewport = useThree((state) => state.viewport)
   const scene = useThree((state) => state.scene)
 
+  const { dispersionOffset } = useControls({
+    dispersionOffset: {
+      value: 0.0095,
+      min: 0.001,
+      max: 0.04,
+      step: 0.001,
+    },
+  })
+
   useFrame((state) => {
     let time = state.clock.getElapsedTime()
 
     // start from 20 to skip first 20 seconds ( optional )
     meshRef.current.material.uniforms.uTime.value = time
+    meshRef.current.material.uniforms.dispersionOffset.value = dispersionOffset
 
     // Tie lens to the pointer
     // getCurrentViewport gives us the width & height that would fill the screen in threejs units
@@ -52,6 +63,10 @@ export default function Shader() {
       texture01: {
         type: "t",
         value: buffer.texture,
+      },
+      dispersionOffset: {
+        type: "f",
+        value: dispersionOffset,
       },
     }),
     [viewport.width, viewport.height, buffer.texture]

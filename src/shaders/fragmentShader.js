@@ -4,6 +4,7 @@ uniform float uTime;
 uniform float progress;
 uniform sampler2D texture01;
 uniform vec4 uResolution;
+uniform float dispersionOffset;
 
 varying vec2 vUv;
 varying vec3 vPosition;
@@ -15,7 +16,7 @@ float PI = 3.1415926;
 #define MAX_DIST 40.
 #define SURF_DIST .005
 #define samples 32
-#define LOD 2
+#define LOD 4
 	
 	float hash(vec2 n) {
 		return fract(sin(dot(n, vec2(12.9898, 4.1414))) * 184.5453);
@@ -131,8 +132,8 @@ float PI = 3.1415926;
 		camUV += n.xy * 0.05 * dif;
 		vec3 cam2 = blur(texture01, camUV, 1./uResolution.xy).xyz * 0.8;
 		vec3 dispersion = vec3(0.);
-		dispersion.r = texture2D(texture01, vec2(camUV.x - n.x * 0.0095,camUV.y)).r;
-		dispersion.b = texture2D(texture01, vec2(camUV.x + n.y * 0.0095, camUV.y)).b;
+		dispersion.r = texture2D(texture01, vec2(camUV.x - n.x * dispersionOffset,camUV.y)).r;
+		dispersion.b = texture2D(texture01, vec2(camUV.x + n.y * dispersionOffset, camUV.y)).b;
 		dispersion.g = texture2D(texture01, camUV).g;
 	
 		col = dif * cam2;
