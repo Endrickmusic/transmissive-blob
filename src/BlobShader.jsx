@@ -1,4 +1,4 @@
-import { useTexture, useFBO } from "@react-three/drei"
+import { useTexture, useFBO, Image } from "@react-three/drei"
 import { useFrame, useThree } from "@react-three/fiber"
 import { useRef, useMemo } from "react"
 import { useControls } from "leva"
@@ -102,6 +102,8 @@ export default function Shader() {
 
   return (
     <>
+      <Image url="./images/clouds.jpg" scale={2} />
+
       <mesh position={[0, 0.5, -4]} rotation={[2, 4, 1]}>
         <boxGeometry />
         <meshNormalMaterial />
