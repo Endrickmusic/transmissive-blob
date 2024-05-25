@@ -132,7 +132,7 @@ float PI = 3.1415926;
 		camUV += n.xy * 0.05 * dif;
 		vec3 cam2 = blur(texture01, camUV, 1./uResolution.xy).xyz * 0.8;
 		vec3 dispersion = vec3(0.);
-		dispersion.r = texture2D(texture01, vec2(camUV.x - n.x * dispersionOffset,camUV.y)).r;
+		dispersion.r = texture2D(texture01, vec2(camUV.x - n.x * dispersionOffset, camUV.y)).r;
 		dispersion.b = texture2D(texture01, vec2(camUV.x + n.y * dispersionOffset, camUV.y)).b;
 		dispersion.g = texture2D(texture01, camUV).g;
 	

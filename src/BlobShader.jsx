@@ -14,12 +14,18 @@ export default function Shader() {
   const viewport = useThree((state) => state.viewport)
   const scene = useThree((state) => state.scene)
 
-  const { dispersionOffset } = useControls({
+  const { dispersionOffset, speed } = useControls({
     dispersionOffset: {
       value: 0.0095,
       min: 0.001,
       max: 0.04,
       step: 0.001,
+    },
+    speed: {
+      value: 1.0,
+      min: 0.01,
+      max: 3.0,
+      step: 0.01,
     },
   })
 
@@ -27,7 +33,7 @@ export default function Shader() {
     let time = state.clock.getElapsedTime()
 
     // start from 20 to skip first 20 seconds ( optional )
-    meshRef.current.material.uniforms.uTime.value = time
+    meshRef.current.material.uniforms.uTime.value = time * speed
     meshRef.current.material.uniforms.dispersionOffset.value = dispersionOffset
 
     // Tie lens to the pointer
