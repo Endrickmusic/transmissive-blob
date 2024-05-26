@@ -2,6 +2,7 @@ const fragmentShader = `
 
 uniform float uTime;
 uniform vec2 uMouse;
+uniform samplerCube iChannel0;
 uniform float progress;
 uniform sampler2D texture01;
 uniform vec4 uResolution;
@@ -131,9 +132,9 @@ vec4 ray(vec3 p, vec3 d)
     return c + background(d) * cr;
 }
 
-void mainImage()
+void main()
 {
-    float t = iTime;
+    float t = uTime;
 
     vec4 vs1 = cos(t * vec4(0.87, 1.13, 1.2, 1.0) + vec4(0.0, 3.32, 0.97, 2.85)) * vec4(-1.7, 2.1, 2.37, -1.9);
     vec4 vs2 = cos(t * vec4(1.07, 0.93, 1.1, 0.81) + vec4(0.3, 3.02, 1.15, 2.97)) * vec4(1.77, -1.81, 1.47, 1.9);
@@ -142,7 +143,7 @@ void mainImage()
 	sphere2 = vec4(vs1.z, vs1.w, vs2.z, 0.9);
 	sphere3 = vec4(vs2.x, vs2.y, vs2.w, 0.8);
 
-    vec2 r = -iMouse.yx / iResolution.yx * pi * 2.0;
+    vec2 r = -uMouse.yx / uResolution.yx * pi * 2.0;
 
     vec4 cs = cos(vec4(r.y, r.x, r.y - pi * 0.5, r.x - pi * 0.5));
     vec3 forward = -vec3(cs.x * cs.y, cs.w, cs.z * cs.y);
@@ -150,11 +151,11 @@ void mainImage()
 	vec3 left = cross(up, forward);
     vec3 eye = -forward * eyedistance;
 
-	vec2 uv = zoom * (fragCoord.xy - iResolution.xy * 0.5) / iResolution.x;
+	vec2 uv = zoom * (gl_FragCoord.xy - uResolution.xy * 0.5) / uResolution.x;
     vec3 dir = normalize(vec3(forward + uv.y * up + uv.x * left));    
     vec4 color = ray(eye, dir);
 #if MULTISAMPLES > 1
-    vec2 uvh = zoom * vec2(0.5) / iResolution.x;
+    vec2 uvh = zoom * vec2(0.5) / uResolution.x;
     color += ray(eye, normalize(forward + (uv.y + uvh.y) * up + (uv.x + uvh.x) * left));
 #if MULTISAMPLES > 2
     color += ray(eye, normalize(forward + (uv.y + uvh.y) * up  + uv.x * left));

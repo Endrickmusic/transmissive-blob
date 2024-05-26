@@ -4,7 +4,7 @@ import { useRef, useMemo, useEffect, useCallback } from "react"
 import { useControls } from "leva"
 
 import vertexShader from "./shaders/vertexShader.js"
-import fragmentShader from "./shaders/fragmentShader.js"
+import fragmentShader from "./shaders/waterFragmentShader.js"
 import { DoubleSide, Vector2 } from "three"
 
 export default function Shader() {
@@ -63,10 +63,11 @@ export default function Shader() {
   useFrame((state) => {
     let time = state.clock.getElapsedTime()
 
-    meshRef.current.material.uniforms.uMouse.value = new Vector2(
-      mousePosition.current.x,
-      mousePosition.current.y
-    )
+    meshRef.current.material.uniforms.uMouse.value = new Vector2(0, 0)
+    // meshRef.current.material.uniforms.uMouse.value = new Vector2(
+    //   mousePosition.current.x,
+    //   mousePosition.current.y
+    // )
 
     meshRef.current.material.uniforms.uTime.value = time * speed
     meshRef.current.material.uniforms.dispersionOffset.value = dispersionOffset
