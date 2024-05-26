@@ -1,6 +1,6 @@
-import { useTexture, useFBO, Image } from "@react-three/drei"
+import { useCubeTexture, useFBO, Image } from "@react-three/drei"
 import { useFrame, useThree } from "@react-three/fiber"
-import { useRef, useMemo } from "react"
+import { useRef, useMemo, useEffect, useCallback } from "react"
 import { useControls } from "leva"
 
 import vertexShader from "./shaders/vertexShader.js"
@@ -13,6 +13,17 @@ export default function Shader() {
   // const texture01 = useTexture("./textures/clouds_02.jpg")
   const viewport = useThree((state) => state.viewport)
   const scene = useThree((state) => state.scene)
+
+  const mousePosition = useRef({ x: 0, y: 0 })
+
+  const updateMousePosition = useCallback((e) => {
+    mousePosition.current = { x: e.pageX, y: e.pageY }
+  }, [])
+
+  const cubeTexture = useCubeTexture(
+    ["px.jpg", "nx.jpg", "py.jpg", "ny.jpg", "pz.jpg", "nz.jpg"],
+    { path: "./cubemap/" }
+  )
 
   const { dispersionOffset, speed, divideFactor, count } = useControls({
     dispersionOffset: {
@@ -41,10 +52,22 @@ export default function Shader() {
     },
   })
 
+  useEffect(() => {
+    window.addEventListener("mousemove", updateMousePosition, false)
+
+    return () => {
+      window.removeEventListener("mousemove", updateMousePosition, false)
+    }
+  }, [updateMousePosition])
+
   useFrame((state) => {
     let time = state.clock.getElapsedTime()
 
-    // start from 20 to skip first 20 seconds ( optional )
+    meshRef.current.material.uniforms.uMouse.value = new Vector2(
+      mousePosition.current.x,
+      mousePosition.current.y
+    )
+
     meshRef.current.material.uniforms.uTime.value = time * speed
     meshRef.current.material.uniforms.dispersionOffset.value = dispersionOffset
     meshRef.current.material.uniforms.divideFactor.value = divideFactor
@@ -76,13 +99,21 @@ export default function Shader() {
         type: "f",
         value: 1.0,
       },
+      uMouse: {
+        type: "v2",
+        value: new Vector2(0, 0),
+      },
       uResolution: {
         type: "v2",
         value: new Vector2(viewport.width, viewport.height),
       },
       texture01: {
-        type: "t",
+        type: "sampler2D",
         value: buffer.texture,
+      },
+      iChannel0: {
+        type: "samplerCube",
+        value: cubeTexture,
       },
       dispersionOffset: {
         type: "f",
