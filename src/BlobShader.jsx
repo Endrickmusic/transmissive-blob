@@ -10,7 +10,7 @@ import { DoubleSide, Vector2 } from "three"
 export default function Shader() {
   const meshRef = useRef()
   const buffer = useFBO()
-  // const texture01 = useTexture("./textures/clouds_02.jpg")
+  // const texture01 = useTexture("./textures/clouds_02.png")
   const viewport = useThree((state) => state.viewport)
   const scene = useThree((state) => state.scene)
 
@@ -21,8 +21,8 @@ export default function Shader() {
   }, [])
 
   const cubeTexture = useCubeTexture(
-    ["px.jpg", "nx.jpg", "py.jpg", "ny.jpg", "pz.jpg", "nz.jpg"],
-    { path: "./cubemap/" }
+    ["px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png"],
+    { path: "./cubemap/potsdamer_platz/" }
   )
 
   const { dispersionOffset, speed, divideFactor, count } = useControls({
@@ -54,7 +54,7 @@ export default function Shader() {
 
   useEffect(() => {
     window.addEventListener("mousemove", updateMousePosition, false)
-
+    console.log("mousePosition", mousePosition)
     return () => {
       window.removeEventListener("mousemove", updateMousePosition, false)
     }
@@ -63,11 +63,13 @@ export default function Shader() {
   useFrame((state) => {
     let time = state.clock.getElapsedTime()
 
-    meshRef.current.material.uniforms.uMouse.value = new Vector2(0, 0)
-    // meshRef.current.material.uniforms.uMouse.value = new Vector2(
-    //   mousePosition.current.x,
-    //   mousePosition.current.y
-    // )
+    console.log("mousePosition", mousePosition.current)
+
+    // meshRef.current.material.uniforms.uMouse.value = new Vector2(0, 0)
+    meshRef.current.material.uniforms.uMouse.value = new Vector2(
+      mousePosition.current.x,
+      mousePosition.current.y
+    )
 
     meshRef.current.material.uniforms.uTime.value = time * speed
     meshRef.current.material.uniforms.dispersionOffset.value = dispersionOffset
@@ -134,7 +136,7 @@ export default function Shader() {
 
   return (
     <>
-      <Image url="./images/clouds.jpg" scale={2} />
+      {/* <Image url="./images/clouds.jpg" scale={2} /> */}
 
       <mesh position={[0, 0.5, -4]} rotation={[2, 4, 1]}>
         <boxGeometry />

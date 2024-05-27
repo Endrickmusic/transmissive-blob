@@ -10,7 +10,9 @@ uniform float dispersionOffset;
 uniform float divideFactor;
 uniform int count;
 
-#define MULTISAMPLES 3 // Max 4
+varying vec2 vUv;
+
+#define MULTISAMPLES 1 // Max 4
 
 const float N = 1.33;
 const float zoom = 2.0;
@@ -143,7 +145,8 @@ void main()
 	sphere2 = vec4(vs1.z, vs1.w, vs2.z, 0.9);
 	sphere3 = vec4(vs2.x, vs2.y, vs2.w, 0.8);
 
-    vec2 r = -uMouse.yx / uResolution.yx * pi * 2.0;
+    vec2 r = -uMouse.yx / uResolution.yx * pi * .005;
+    // vec2 r = uMouse.yx;
 
     vec4 cs = cos(vec4(r.y, r.x, r.y - pi * 0.5, r.x - pi * 0.5));
     vec3 forward = -vec3(cs.x * cs.y, cs.w, cs.z * cs.y);
@@ -151,7 +154,8 @@ void main()
 	vec3 left = cross(up, forward);
     vec3 eye = -forward * eyedistance;
 
-	vec2 uv = zoom * (gl_FragCoord.xy - uResolution.xy * 0.5) / uResolution.x;
+	// vec2 uv = zoom * (gl_FragCoord.xy - uResolution.xy * 0.5) / uResolution.x;
+    vec2 uv = vUv * 2.0 - 1.0;
     vec3 dir = normalize(vec3(forward + uv.y * up + uv.x * left));    
     vec4 color = ray(eye, dir);
 #if MULTISAMPLES > 1
@@ -166,6 +170,7 @@ void main()
     color /= float(MULTISAMPLES);
 #endif
     gl_FragColor = color;
+    // gl_FragColor = vec4(r, 0.2, 1.0);
 }
 `
 
