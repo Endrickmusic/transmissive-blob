@@ -40,8 +40,14 @@ float fresnel(float n1, float n2, float cos_theta)
 }
 
 vec4 background(vec3 d)
+
 {
-    return textureLod(iChannel0, d, 0.0);
+    // Convert direction vector to 2D coordinates
+    vec2 uv = vec2(atan(d.z, d.x) / (2.0 * pi) + 0.5, d.y * 0.5 + 0.5);
+  
+    // Sample the 2D texture
+    return texture2D(texture01, uv);
+
 }
 
 float f(vec3 p)
