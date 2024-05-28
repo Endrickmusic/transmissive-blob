@@ -82,8 +82,11 @@ vec4 ray(vec3 p, vec3 d)
 {
     float k = min_distance;
     float nf = 1.0;
+    // color reset
     vec4 c = vec4(0.0);
     float cr = 1.0;
+    
+    // raymarching
     for (int j = 0; j < max_intersections; ++j)
     {
         for (int i = 0; i < maxsteps; ++i)
@@ -99,6 +102,7 @@ vec4 ray(vec3 p, vec3 d)
                 p += d * k;
                 
                 vec3 n = -normalize(fd(p)) * nf;
+                // refract
                 vec3 r = refract(d, n, nf > 0.0 ? 1.0 / N : N);
 
                 if (nf < 0.0)

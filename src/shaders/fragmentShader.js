@@ -129,7 +129,7 @@ float PI = 3.1415926;
 		vec3 ld =  vec3(0., 0., 1.);
 		// raymarching
 		float d = rayMarch(ro, rd);
-		// object
+		// object position
 		vec3 p = ro + rd * d;
 		// normal
 		vec3 n = normals(p, 0.03);
@@ -150,7 +150,9 @@ float PI = 3.1415926;
 		dispersion.r = texture2D(texture01, vec2(camUV.x - n.x * dispersionOffset, camUV.y)).r;
 		dispersion.b = texture2D(texture01, vec2(camUV.x + n.y * dispersionOffset, camUV.y)).b;
 		dispersion.g = texture2D(texture01, camUV).g;
-	
+
+		// final color
+
 		col = dif * cam2;
 		col += cam2 * 0.15;         
 		col += oil * 0.4;
