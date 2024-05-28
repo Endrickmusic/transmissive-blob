@@ -59,11 +59,12 @@ float PI = 3.1415926;
 		return final;
 	}
 	float rayMarch(vec3 ro, vec3 rd) {
-		float dO=0.;
+		float dO = 0.;
 		float matId = -1.;
 		
 		for(int i=0; i<MAX_STEPS; i++) {
-			vec3 p = ro + rd*dO;
+
+			vec3 p = ro + rd * dO;
 			float res = getDist(p);
 			float dS = res;
 			dO += dS;
@@ -119,18 +120,26 @@ float PI = 3.1415926;
 		float uTime = uTime * 2.;
         
         // camera position
+
+		// ray origin
 		vec3 ro = vec3(-1.0, -1., 1.);
+		// ray direction
 		vec3 rd = normalize(vec3(vUv.x, vUv.y + 0.2 , 2.));
+		// light direction
 		vec3 ld =  vec3(0., 0., 1.);
+		// raymarching
 		float d = rayMarch(ro, rd);
+		// object
 		vec3 p = ro + rd * d;
+		// normal
 		vec3 n = normals(p, 0.03);
+		// diffuse
 		float dif = diffuse(p, n, ld); 
 		// fresnel
 		float fresnel = smoothstep(0.5, 0.3, dot(-rd, n));
 		// oil
 		vec3 oil = vec3(noise(n.xy * 2.7), noise(n.xy * 3.), noise(n.xy * 3.3)); 
-		
+		// camera texture
 		vec2 camUV = vUv;
 		vec4 cam1 = texture2D(texture01, camUV);
 		camUV += n.xy * 0.05 * dif;
