@@ -1,6 +1,6 @@
 import { useCubeTexture, useFBO, Image } from "@react-three/drei"
 import { useFrame, useThree } from "@react-three/fiber"
-import { useRef, useMemo, useEffect, useCallback } from "react"
+import { useState, useRef, useMemo, useEffect, useCallback } from "react"
 import { useControls } from "leva"
 
 import vertexShader from "./shaders/vertexShader.js"
@@ -14,11 +14,20 @@ export default function Shader() {
   const viewport = useThree((state) => state.viewport)
   const scene = useThree((state) => state.scene)
 
+  // State to track whether the mouse button is down
+  const [mouseDown, setMouseDown] = useState(false)
+
   const mousePosition = useRef({ x: 0, y: 0 })
 
-  const updateMousePosition = useCallback((e) => {
-    mousePosition.current = { x: e.pageX, y: e.pageY }
-  }, [])
+  const updateMousePosition = useCallback(
+    (e) => {
+      if (mouseDown) {
+        console.log("updateMousePosition", e.pointer)
+        mousePosition.current = { x: e.pageX, y: e.pageY }
+      }
+    },
+    [mouseDown]
+  )
 
   const cubeTexture = useCubeTexture(
     ["px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png"],
@@ -51,14 +60,6 @@ export default function Shader() {
       step: 1,
     },
   })
-
-  useEffect(() => {
-    window.addEventListener("mousemove", updateMousePosition, false)
-    console.log("mousePosition", mousePosition)
-    return () => {
-      window.removeEventListener("mousemove", updateMousePosition, false)
-    }
-  }, [updateMousePosition])
 
   useFrame((state) => {
     let time = state.clock.getElapsedTime()
@@ -143,7 +144,13 @@ export default function Shader() {
         <meshNormalMaterial />
       </mesh>
 
-      <mesh ref={meshRef} scale={[viewport.width, viewport.height, 1]}>
+      <mesh
+        onPointerDown={() => setMouseDown(true)}
+        onPointerUp={() => setMouseDown(false)}
+        onPointerMove={updateMousePosition}
+        ref={meshRef}
+        scale={[viewport.width, viewport.height, 1]}
+      >
         <planeGeometry args={[1, 1]} />
         <shaderMaterial
           uniforms={uniforms}

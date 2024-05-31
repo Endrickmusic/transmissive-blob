@@ -73,7 +73,7 @@ void main()
     // vec2 uv = (gl_FragCoord.xy - .5 * uResolution.xy) / uResolution.y;
     vec2 uv = (vUv * 2. - 1.) * vec2(uResolution.x / uResolution.y, 1.);
 
-	vec2 m = uMouse.xy / uResolution.xy * 0.005;
+	vec2 m = vec2(uMouse.x, -uMouse.y) / uResolution.xy * 0.005;
 
     vec3 ro = vec3(0, 3, -3);
     ro.yz *= Rot(-m.y*PI+1.);
