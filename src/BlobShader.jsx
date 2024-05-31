@@ -4,7 +4,7 @@ import { useRef, useMemo, useEffect, useCallback } from "react"
 import { useControls } from "leva"
 
 import vertexShader from "./shaders/vertexShader.js"
-import fragmentShader from "./shaders/dispersionFragShader.js"
+import fragmentShader from "./shaders/refractFragShader.js"
 import { DoubleSide, Vector2 } from "three"
 
 export default function Shader() {
