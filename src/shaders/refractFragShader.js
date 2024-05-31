@@ -19,6 +19,7 @@ varying vec2 vUv;
 #define PI 3.141592
 #define S smoothstep
 #define T iTime
+#define IOR 1.45
 
 mat2 Rot(float a) {
     float s=sin(a), c=cos(a);
@@ -37,12 +38,12 @@ float GetDist(vec3 p) {
     return d;
 }
 
-float RayMarch(vec3 ro, vec3 rd) {
+float RayMarch(vec3 ro, vec3 rd, float side) {
 	float dO=0.;
     
     for(int i=0; i<MAX_STEPS; i++) {
     	vec3 p = ro + rd*dO;
-        float dS = GetDist(p);
+        float dS = GetDist(p) * side;
         dO += dS;
         if(dO>MAX_DIST || abs(dS)<SURF_DIST) break;
     }
@@ -73,24 +74,35 @@ void main()
     // vec2 uv = (gl_FragCoord.xy - .5 * uResolution.xy) / uResolution.y;
     vec2 uv = (vUv * 2. - 1.) * vec2(uResolution.x / uResolution.y, 1.);
 
-	vec2 m = vec2(uMouse.x, -uMouse.y) / uResolution.xy * 0.005;
+	vec2 m = vec2(uMouse.x, -uMouse.y) / uResolution.xy * 0.002;
 
     vec3 ro = vec3(0, 3, -3);
     ro.yz *= Rot(-m.y*PI+1.);
     ro.xz *= Rot(-m.x*TAU);
     
     vec3 rd = GetRayDir(uv, ro, vec3(0,0.,0), 1.);
-    vec3 col = vec3(0);
+    vec3 col = texture2D(texture01, vUv).xyz;
    
-    float d = RayMarch(ro, rd);
+    float d = RayMarch(ro, rd, 1.);
 
     if(d<MAX_DIST) {
-        vec3 p = ro + rd * d;
-        vec3 n = GetNormal(p);
-        vec3 r = reflect(rd, n);
+        vec3 p = ro + rd * d; // 3D hit position
+        vec3 n = GetNormal(p); // normal at hit position
+        vec3 r = reflect(rd, n); // reflection
+        
+        vec3 pEnter = p - n * SURF_DIST * 3.; // enter surface
+        vec3 rdIn = refract(rd, n, 1./IOR); // ray direction when entering the object
 
-        float dif = dot(n, normalize(vec3(1,2,3)))*.5+.5;
-        col = vec3(dif);
+        float dIn = RayMarch(p, rdIn, -1.); // inside the object
+
+        vec3 pExit = pEnter + rdIn * d; // 3D hit position of exit
+        vec3 nExit = -GetNormal(pExit); // normal at hit position
+
+        vec3 rdOut = refract(rdIn, nExit, IOR); // ray direction when exiting the object
+        if(dot(rdOut, rdOut)==0.) rdOut = reflect(rdIn, nExit); // total internal reflection
+
+        vec3 reflTex = texture2D(iChannel0, rdOut).rgb;
+        col = vec3(reflTex);
     }
     
     col = pow(col, vec3(.4545));	// gamma correction
