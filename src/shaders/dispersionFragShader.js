@@ -7,7 +7,7 @@ uniform float progress;
 uniform sampler2D texture01;
 uniform vec4 uResolution;
 uniform float dispersionOffset;
-uniform float divideFactor;
+uniform float lensZoom;
 uniform int count;
 
 varying vec2 vUv;
@@ -18,7 +18,7 @@ void main() {
 //   vec2 uv = gl_FragCoord.xy / uResolution.xy;
   vec2 uv = vUv;
   vec2 lens_uv = gl_FragCoord.xy / uResolution.y;
-  vec2 lens_pos = vec2(uMouse.x, uMouse.y) / uResolution.y;
+  vec2 lens_pos = vec2(uMouse.x, (1.0 - uMouse.y) + 1080.0) / uResolution.y;
 //   vec2 lens_pos = vec2(380.0, 240.0);
   if (uMouse.xy == vec2(0, 0)) {
 	lens_pos = vec2(1.0, 0.5);
@@ -29,7 +29,7 @@ void main() {
   // Knobs to control the size and the "zoom" amount of the lens
 //   float lens_radius = 0.45;
   float lens_radius = 100.;
-  float lens_zoom = 2.0;
+  float lens_zoom = lensZoom;
 
   // pretend that the lens is spherical
   // For the z component, see https://www.desmos.com/calculator/5p0apo0bqm
