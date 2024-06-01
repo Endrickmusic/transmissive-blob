@@ -81,7 +81,7 @@ float RayMarch(vec3 ro, vec3 rd, float side) {
 }
 
 vec3 GetNormal(vec3 p) {
-    vec2 e = vec2(.001, 0);
+    vec2 e = vec2(.015, 0);
     vec3 n = GetDist(p) - 
         vec3(GetDist(p-e.xyy), GetDist(p-e.yxy),GetDist(p-e.yyx));
     
@@ -118,6 +118,7 @@ void main()
         vec3 p = ro + rd * d; // 3D hit position
         vec3 n = GetNormal(p); // normal at hit position
         vec3 r = reflect(rd, n); // reflection
+        vec3 refOutside = texture2D(iChannel0, r).rgb; // reflection texture
 
         // float dif = dot(n, normalize(vec3(1,2,3)))*.5+.5;
         
@@ -133,7 +134,13 @@ void main()
         if(dot(rdOut, rdOut)==0.) rdOut = reflect(rdIn, nExit); // total internal reflection
 
         vec3 reflTex = texture2D(iChannel0, rdOut).rgb;
-        col = vec3(reflTex);
+
+        // fresnel
+        float fresnel = pow(1. + dot(rd, n), 3.);
+        // col = vec3(reflTex);
+        // col = vec3(fresnel);
+
+        col = mix(reflTex, refOutside, fresnel);
     }
     
     col = pow(col, vec3(.4545));	// gamma correction
