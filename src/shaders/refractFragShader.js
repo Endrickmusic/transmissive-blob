@@ -27,13 +27,19 @@ mat2 Rot(float a) {
 }
 
 float sdBox(vec3 p, vec3 s) {
-    p = abs(p)-s;
-	return length(max(p, 0.))+min(max(p.x, max(p.y, p.z)), 0.);
+    p = abs(p) - s;
+	return length(max(p, 0.)) + min(max(p.x, max(p.y, p.z)), 0.);
+}
+
+float sdSphere(vec3 p, float r) 
+{
+	return length(p) - r;   
 }
 
 
 float GetDist(vec3 p) {
-    float d = sdBox(p, vec3(1));
+    // float d = sdBox(p, vec3(1));
+    float d = sdSphere(p, 1.);
     
     return d;
 }
