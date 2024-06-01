@@ -81,7 +81,7 @@ void main()
     ro.xz *= Rot(-m.x*TAU);
     
     vec3 rd = GetRayDir(uv, ro, vec3(0,0.,0), 1.);
-    vec3 col = texture2D(texture01, vUv).xyz;
+    vec3 col = texture2D(iChannel0, rd).xyz;
    
     float d = RayMarch(ro, rd, 1.);
 
@@ -89,6 +89,8 @@ void main()
         vec3 p = ro + rd * d; // 3D hit position
         vec3 n = GetNormal(p); // normal at hit position
         vec3 r = reflect(rd, n); // reflection
+
+        // float dif = dot(n, normalize(vec3(1,2,3)))*.5+.5;
         
         vec3 pEnter = p - n * SURF_DIST * 3.; // enter surface
         vec3 rdIn = refract(rd, n, 1./IOR); // ray direction when entering the object
