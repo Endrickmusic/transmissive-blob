@@ -51,9 +51,17 @@ float GetDist(vec3 p) {
     float ec = 1.5;
     float r = 0.5;
 
-    float s1 = sdSphere(p - ec * vec3(cos(t*1.1),cos(t*1.3),cos(t*1.7)), r);
-    float s2 = sdSphere(p + ec * vec3(cos(t*0.7),cos(t*1.9),cos(t*2.3)), r);
-    float s3 = sdSphere(p + ec * vec3(cos(t*0.3),cos(t*2.9),sin(t*1.1)), r);
+    // spheres
+    // float s1 = sdSphere(p - ec * vec3(cos(t*1.1),cos(t*1.3),cos(t*1.7)), r);
+    // float s2 = sdSphere(p + ec * vec3(cos(t*0.7),cos(t*1.9),cos(t*2.3)), r);
+    // float s3 = sdSphere(p + ec * vec3(cos(t*0.3),cos(t*2.9),sin(t*1.1)), r);
+    
+    // boxes
+    float s1 = sdBox(p - ec * vec3(cos(t*1.1),cos(t*1.3),cos(t*1.7)), vec3(r));
+    float s2 = sdBox(p + ec * vec3(cos(t*0.7),cos(t*1.9),cos(t*2.3)), vec3(r));
+    float s3 = sdBox(p + ec * vec3(cos(t*0.3),cos(t*2.9),sin(t*1.1)), vec3(r));
+
+
     float k = .5;
     
     return smin (s1, smin(s2, s3, k), k);
@@ -116,9 +124,9 @@ void main()
         vec3 pEnter = p - n * SURF_DIST * 3.; // enter surface
         vec3 rdIn = refract(rd, n, 1./IOR); // ray direction when entering the object
 
-        float dIn = RayMarch(p, rdIn, -1.); // inside the object
+        float dIn = RayMarch(pEnter, rdIn, -1.); // inside the object
 
-        vec3 pExit = pEnter + rdIn * d; // 3D hit position of exit
+        vec3 pExit = pEnter + rdIn * dIn; // 3D position of exit
         vec3 nExit = -GetNormal(pExit); // normal at hit position
 
         vec3 rdOut = refract(rdIn, nExit, IOR); // ray direction when exiting the object
