@@ -21,6 +21,13 @@ varying vec2 vUv;
 #define T iTime
 #define IOR 1.45
 
+float smin( float a, float b, float k )
+{
+    k *= 4.0;
+    float h = max( k-abs(a-b), 0.0 )/k;
+    return min(a,b) - h*h*k*(1.0/4.0);
+}
+
 mat2 Rot(float a) {
     float s=sin(a), c=cos(a);
     return mat2(c, -s, s, c);
@@ -39,9 +46,17 @@ float sdSphere(vec3 p, float r)
 
 float GetDist(vec3 p) {
     // float d = sdBox(p, vec3(1));
-    float d = sdSphere(p, 1.);
+    // float d = sdSphere(p, 1.);
+    float t = uTime * 0.2;
+    float ec = 1.5;
+    float r = 0.5;
+
+    float s1 = sdSphere(p - ec * vec3(cos(t*1.1),cos(t*1.3),cos(t*1.7)), r);
+    float s2 = sdSphere(p + ec * vec3(cos(t*0.7),cos(t*1.9),cos(t*2.3)), r);
+    float s3 = sdSphere(p + ec * vec3(cos(t*0.3),cos(t*2.9),sin(t*1.1)), r);
+    float k = .5;
     
-    return d;
+    return smin (s1, smin(s2, s3, k), k);
 }
 
 float RayMarch(vec3 ro, vec3 rd, float side) {
