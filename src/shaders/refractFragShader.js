@@ -122,8 +122,8 @@ void main()
     
     vec3 rd = GetRayDir(uv, ro, vec3(0,0.,0), 1.);
 
-    vec3 col = vec3(0.);
-    // vec3 col = texture2D(iChannel0, rd).xyz;
+    // vec3 col = vec3(0.);
+    vec3 col = texture2D(iChannel0, vec3(-rd.x * 3.0, rd.y * 3.0, rd.z)).xyz;
     // vec3 col = texture2D(texture01, vUv).xyz;
    
     float d = RayMarch(ro, rd, 1.);
@@ -176,7 +176,13 @@ void main()
     
     col = pow(col, vec3(.4545));	// gamma correction
     
-    gl_FragColor = vec4(col,1.0);
+    if (d > MAX_DIST) { 
+            // Set the alpha to 0 for parts outside the raymarched object
+            gl_FragColor = vec4(1.,1.,1.,0.0);
+        } else {
+            // Set the alpha to 1 for parts inside the raymarched object
+            gl_FragColor = vec4(col, 1.0);}
+    // gl_FragColor = vec4(col, 1.0);
 }
 `
 
