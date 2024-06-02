@@ -21,19 +21,22 @@ const float TWO_PI = 2.0*PI;
 float hash(in float v) { return fract(sin(v)*43237.5324); }
 vec3 hash3(in float v) { return vec3(hash(v), hash(v*99.), hash(v*9999.)); }
 
-float sphere(in vec3 p, in float r) { return length(p)-r; }
+float sphere(in vec3 p, in float r) { 
+    return length(p)-r; }
+
 float opSmoothUnion( float d1, float d2, float k ) {
     float h = clamp( 0.5 + 0.5*(d2-d1)/k, 0.0, 1.0 );
     return mix( d2, d1, h ) - k*h*(1.0-h);
 }
 
-#define BALL_NUM 10
+#define BALL_NUM 5
+
 float map(in vec3 p) {
   float res = 1e5;
   for(int i=0; i<BALL_NUM; i++) {
-    float fi = float(i)+1.;
-    float r = 0.+1.5*hash(fi);
-    vec3 offset = 2.*sin(hash3(fi)*uTime);
+    float fi = float(i) + 1.;
+    float r = 0.1 + 0.8 * hash(fi);
+    vec3 offset = 1.1 * sin(hash3(fi) * uTime);
     res = opSmoothUnion(res, sphere(p-offset, r), 0.75);
   }
   return res;
@@ -70,7 +73,7 @@ void main()
     // ray origin
     vec3 ro = 5. * vec3(cos(uTime * 1.1), 0., sin(uTime * 1.1));
     
-    ro = vec3(0., 0., 8.);
+    ro = vec3(0., 0., 6.);
     
     // ray direction
     vec3 rd = normalize(lookAt(ro, vec3(0.), 0.) * vec3(p,  2.));
@@ -102,6 +105,8 @@ void main()
 
         vec2 texCoord = ref.xy * 0.5 + 0.5;
         color = texture2D(texture01, texCoord).rgb;
+
+        // fresnel
         color += vec3(pow(1.-clamp(dot(-rd, nor), 0., 1.), 2.));
         gl_FragColor = vec4(color, 1.);
     }
