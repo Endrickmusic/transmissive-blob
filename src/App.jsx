@@ -14,7 +14,7 @@ export default function App() {
     >
       <Environment
         background
-        preset="city"
+        preset="forest"
         // path="./cubemap/potsdamer_platz/"
       />
       <color attach="background" args={["#eeeeee"]} />

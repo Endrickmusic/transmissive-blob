@@ -1,4 +1,11 @@
-import { useCubeTexture, useFBO, Image } from "@react-three/drei"
+import {
+  useCubeTexture,
+  useFBO,
+  CubeCamera,
+  Image,
+  OrbitControls,
+  PerspectiveCamera,
+} from "@react-three/drei"
 import { useFrame, useThree } from "@react-three/fiber"
 import { useState, useRef, useMemo, useEffect, useCallback } from "react"
 import { useControls } from "leva"
@@ -13,6 +20,7 @@ export default function Shader() {
   // const texture01 = useTexture("./textures/clouds_02.png")
   const viewport = useThree((state) => state.viewport)
   const scene = useThree((state) => state.scene)
+  const camera = useThree((state) => state.camera)
 
   // State to track whether the mouse button is down
   const [mouseDown, setMouseDown] = useState(false)
@@ -63,6 +71,10 @@ export default function Shader() {
 
   useFrame((state) => {
     let time = state.clock.getElapsedTime()
+
+    // Update camera position uniform
+    meshRef.current.material.uniforms.uCameraPos.value =
+      state.camera.position.clone()
 
     // console.log("mousePosition", mousePosition.current)
 
@@ -115,10 +127,6 @@ export default function Shader() {
         type: "sampler2D",
         value: buffer.texture,
       },
-      iChannel0: {
-        type: "samplerCube",
-        value: cubeTexture,
-      },
       dispersionOffset: {
         type: "f",
         value: dispersionOffset,
@@ -131,35 +139,50 @@ export default function Shader() {
         type: "i",
         value: count,
       },
+      uCameraPos: {
+        value: camera.position,
+      },
     }),
     [viewport.width, viewport.height, buffer.texture]
   )
 
   return (
     <>
-      {/* <Image url="./images/clouds.jpg" scale={2} /> */}
+      <OrbitControls />
+
+      <Image url="./images/clouds.jpg" scale={2} position={(0, 3, -3)} />
 
       <mesh position={[0, 0.5, -4]} rotation={[2, 4, 1]}>
         <boxGeometry />
         <meshNormalMaterial />
       </mesh>
 
-      <mesh
-        onPointerDown={() => setMouseDown(true)}
-        onPointerUp={() => setMouseDown(false)}
-        onPointerMove={updateMousePosition}
-        ref={meshRef}
-        scale={[viewport.width, viewport.height, 1]}
-      >
-        <planeGeometry args={[1, 1]} />
-        <shaderMaterial
-          uniforms={uniforms}
-          vertexShader={vertexShader}
-          fragmentShader={fragmentShader}
-          side={DoubleSide}
-          transparent={true}
-        />
-      </mesh>
+      <CubeCamera>
+        {(texture) => (
+          <PerspectiveCamera makeDefault position={[0, 0, 5]}>
+            <mesh
+              position={[0, 0, -2]}
+              onPointerDown={() => setMouseDown(true)}
+              onPointerUp={() => setMouseDown(false)}
+              onPointerMove={updateMousePosition}
+              ref={meshRef}
+              scale={[viewport.width, viewport.height, 1]}
+            >
+              <planeGeometry args={[1, 1]} />
+              <shaderMaterial
+                vertexShader={vertexShader}
+                fragmentShader={fragmentShader}
+                side={DoubleSide}
+                transparent={true}
+                uniforms={{
+                  ...uniforms,
+                  iChannel0: { value: texture },
+                }}
+              />
+            </mesh>
+          </PerspectiveCamera>
+        )}
+      </CubeCamera>
     </>
   )
 }

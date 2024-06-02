@@ -2,6 +2,7 @@ const fragmentShader = `
 
 uniform float uTime;
 uniform vec2 uMouse;
+uniform vec3 uCameraPos;
 uniform samplerCube iChannel0;
 uniform float progress;
 uniform sampler2D texture01;
@@ -110,17 +111,20 @@ vec3 GetRayDir(vec2 uv, vec3 p, vec3 l, float z) {
 
 void main()
 {
-    // vec2 uv = (gl_FragCoord.xy - .5 * uResolution.xy) / uResolution.y;
     vec2 uv = (vUv * 2. - 1.) * vec2(uResolution.x / uResolution.y, 1.);
 
 	vec2 m = vec2(uMouse.x, -uMouse.y) / uResolution.xy * 0.002;
 
-    vec3 ro = vec3(0, 3, -3);
-    ro.yz *= Rot(-m.y*PI+1.);
-    ro.xz *= Rot(-m.x*TAU);
+    // vec3 ro = vec3(0, 3, 1);
+    vec3 ro = uCameraPos;
+    // ro.yz *= Rot(-m.y*PI+1.);
+    // ro.xz *= Rot(-m.x*TAU);
     
     vec3 rd = GetRayDir(uv, ro, vec3(0,0.,0), 1.);
-    vec3 col = texture2D(iChannel0, rd).xyz;
+
+    vec3 col = vec3(0.);
+    // vec3 col = texture2D(iChannel0, rd).xyz;
+    // vec3 col = texture2D(texture01, vUv).xyz;
    
     float d = RayMarch(ro, rd, 1.);
 
