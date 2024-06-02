@@ -47,18 +47,28 @@ float sdSphere(vec3 p, float r)
 float GetDist(vec3 p) {
     // float d = sdBox(p, vec3(1));
     // float d = sdSphere(p, 1.);
+
     float t = uTime * 0.2;
     float ec = 1.5;
     float r = 0.5;
+
+    mat2 R = Rot(t);
+    vec3 rotatedP1 = vec3(R * p.xz, p.y);
+    vec3 rotatedP2 = vec3(p.x, R * p.yz);
 
     // spheres
     // float s1 = sdSphere(p - ec * vec3(cos(t*1.1),cos(t*1.3),cos(t*1.7)), r);
     // float s2 = sdSphere(p + ec * vec3(cos(t*0.7),cos(t*1.9),cos(t*2.3)), r);
     // float s3 = sdSphere(p + ec * vec3(cos(t*0.3),cos(t*2.9),sin(t*1.1)), r);
     
+
     // boxes
-    float s1 = sdBox(p - ec * vec3(cos(t*1.1),cos(t*1.3),cos(t*1.7)), vec3(r));
-    float s2 = sdBox(p + ec * vec3(cos(t*0.7),cos(t*1.9),cos(t*2.3)), vec3(r));
+    float s1 = sdBox(rotatedP1 - ec * vec3(
+        cos(t*1.1),
+        cos(t*1.3),
+        cos(t*1.7)),
+         vec3(r));
+    float s2 = sdBox(rotatedP2 + ec * vec3(cos(t*0.7),cos(t*1.9),cos(t*2.3)), vec3(r));
     float s3 = sdBox(p + ec * vec3(cos(t*0.3),cos(t*2.9),sin(t*1.1)), vec3(r));
 
 
@@ -130,10 +140,27 @@ void main()
         vec3 pExit = pEnter + rdIn * dIn; // 3D position of exit
         vec3 nExit = -GetNormal(pExit); // normal at hit position
 
-        vec3 rdOut = refract(rdIn, nExit, IOR); // ray direction when exiting the object
-        if(dot(rdOut, rdOut)==0.) rdOut = reflect(rdIn, nExit); // total internal reflection
+        vec3 reflTex = vec3(0.);
 
-        vec3 reflTex = texture2D(iChannel0, rdOut).rgb;
+        vec3 rdOut = vec3(0.);
+
+        // chromatic aberration
+        float abb = .02;
+
+        // red
+        rdOut = refract(rdIn, nExit, IOR - abb ); // ray direction when exiting the object
+        if(dot(rdOut, rdOut)==0.) rdOut = reflect(rdIn, nExit); // total internal reflection
+        reflTex.r = texture2D(iChannel0, rdOut).r;
+        
+        // green
+        rdOut = refract(rdIn, nExit, IOR); // ray direction when exiting the object
+        if(dot(rdOut, rdOut)==0.) rdOut = reflect(rdIn, nExit); // total internal reflection
+        reflTex.g = texture2D(iChannel0, rdOut).g;
+
+        // blue
+        rdOut = refract(rdIn, nExit, IOR + abb); // ray direction when exiting the object
+        if(dot(rdOut, rdOut)==0.) rdOut = reflect(rdIn, nExit); // total internal reflection
+        reflTex.b = texture2D(iChannel0, rdOut).b;
 
         // fresnel
         float fresnel = pow(1. + dot(rd, n), 3.);
