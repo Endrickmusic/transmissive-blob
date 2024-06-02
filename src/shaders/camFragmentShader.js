@@ -11,6 +11,8 @@ uniform float divideFactor;
 uniform int count;
 
 varying vec2 vUv;
+varying vec3 worldNormal;
+varying vec3 eyeVector;
 
 const float PI = 3.14159265359;
 const float HALF_PI = 0.5*PI;
@@ -61,6 +63,9 @@ mat3 lookAt(in vec3 eye, in vec3 tar, in float r) {
 
 void main()
 {
+    float iorRatio = 1.0/1.31;
+    vec3 wNormal = worldNormal;
+    vec3 refractVec = refract(eyeVector, wNormal, iorRatio);
     // vec2 uv = gl_FragCoord.xy / uResolution.xy;
     
     // UVs
@@ -104,7 +109,8 @@ void main()
         vec3 ref = reflect(rd, nor);
 
         vec2 texCoord = ref.xy * 0.5 + 0.5;
-        color = texture2D(texture01, texCoord).rgb;
+        // color = texture2D(texture01, texCoord).rgb;
+        color = texture2D(texture01, uv + refractVec.xy).rgb;
 
         // fresnel
         color += vec3(pow(1.-clamp(dot(-rd, nor), 0., 1.), 2.));
