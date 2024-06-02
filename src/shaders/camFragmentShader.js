@@ -7,7 +7,7 @@ uniform float progress;
 uniform sampler2D texture01;
 uniform vec4 uResolution;
 uniform float dispersionOffset;
-uniform float divideFactor;
+uniform float IOR;
 uniform int count;
 
 varying vec2 vUv;
@@ -63,9 +63,8 @@ mat3 lookAt(in vec3 eye, in vec3 tar, in float r) {
 
 void main()
 {
-    float iorRatio = 1.0/1.31;
-    vec3 wNormal = worldNormal;
-    vec3 refractVec = refract(eyeVector, wNormal, iorRatio);
+    float iorRatio = IOR;
+
     // vec2 uv = gl_FragCoord.xy / uResolution.xy;
     
     // UVs
@@ -74,7 +73,10 @@ void main()
     // 
     // vec2 p = (gl_FragCoord.xy * 2. - uResolution.xy) / min(uResolution.x, uResolution.y);
     vec2 p = vec2(uv * 2. - 1.);
+
     vec3 color = vec3(0.);
+    
+    
     // ray origin
     vec3 ro = 5. * vec3(cos(uTime * 1.1), 0., sin(uTime * 1.1));
     
@@ -107,13 +109,23 @@ void main()
         vec3 nor = normal(pos);
         // reflection
         vec3 ref = reflect(rd, nor);
+        vec3 refOutside = texture2D(iChannel0, ref).rgb;
+
+        // refraction
+        vec3 refractVec = refract(eyeVector, nor, iorRatio);
 
         vec2 texCoord = ref.xy * 0.5 + 0.5;
         // color = texture2D(texture01, texCoord).rgb;
         color = texture2D(texture01, uv + refractVec.xy).rgb;
 
         // fresnel
-        color += vec3(pow(1.-clamp(dot(-rd, nor), 0., 1.), 2.));
+        float fresnel = pow(1. + dot(rd, nor), 1.5);
+
+        color = mix(color, refOutside, fresnel); 
+        
+        // color = vec3(fresnel);
+
+        color = pow(color, vec3(.5545));
         gl_FragColor = vec4(color, 1.);
     }
     // gl_FragColor = vec4(.5);

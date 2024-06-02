@@ -25,7 +25,7 @@ export default function Shader() {
     { path: "./cubemap/potsdamer_platz/" }
   )
 
-  const { dispersionOffset, speed, divideFactor, count } = useControls({
+  const { dispersionOffset, speed, IOR, count } = useControls({
     dispersionOffset: {
       value: 0.0095,
       min: 0.001,
@@ -38,7 +38,7 @@ export default function Shader() {
       max: 3.0,
       step: 0.01,
     },
-    divideFactor: {
+    IOR: {
       value: 0.5,
       min: 0.01,
       max: 1.0,
@@ -73,7 +73,7 @@ export default function Shader() {
 
     meshRef.current.material.uniforms.uTime.value = time * speed
     meshRef.current.material.uniforms.dispersionOffset.value = dispersionOffset
-    meshRef.current.material.uniforms.divideFactor.value = divideFactor
+    meshRef.current.material.uniforms.IOR.value = IOR
     meshRef.current.material.uniforms.count.value = count
 
     // Tie lens to the pointer
@@ -122,9 +122,9 @@ export default function Shader() {
         type: "f",
         value: dispersionOffset,
       },
-      divideFactor: {
+      IOR: {
         type: "f",
-        value: divideFactor,
+        value: IOR,
       },
       count: {
         type: "i",
