@@ -6,9 +6,12 @@ uniform samplerCube iChannel0;
 uniform float progress;
 uniform sampler2D texture01;
 uniform vec4 uResolution;
-uniform float dispersionOffset;
-uniform float IOR;
-uniform int count;
+uniform float uReflection;
+uniform float uSpeed;
+uniform float uIOR;
+uniform int uCount;
+uniform float uSize;
+uniform float uDispersion;
 
 varying vec2 vUv;
 varying vec3 worldNormal;
@@ -37,7 +40,7 @@ float map(in vec3 p) {
   float res = 1e5;
   for(int i=0; i<BALL_NUM; i++) {
     float fi = float(i) + 1.;
-    float r = 0.1 + 0.8 * hash(fi);
+    float r = uSize + 0.8 * hash(fi);
     vec3 offset = 1.1 * sin(hash3(fi) * uTime);
     res = opSmoothUnion(res, sphere(p-offset, r), 0.75);
   }
@@ -63,7 +66,7 @@ mat3 lookAt(in vec3 eye, in vec3 tar, in float r) {
 
 void main()
 {
-    float iorRatio = IOR;
+    float iorRatio = uIOR;
 
     // vec2 uv = gl_FragCoord.xy / uResolution.xy;
     

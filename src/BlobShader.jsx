@@ -25,8 +25,8 @@ export default function Shader() {
     { path: "./cubemap/potsdamer_platz/" }
   )
 
-  const { dispersionOffset, speed, IOR, count } = useControls({
-    dispersionOffset: {
+  const { reflection, speed, IOR, count, size, dispersion } = useControls({
+    reflection: {
       value: 0.0095,
       min: 0.001,
       max: 0.04,
@@ -45,6 +45,18 @@ export default function Shader() {
       step: 0.01,
     },
     count: {
+      value: 3,
+      min: 1,
+      max: 20,
+      step: 1,
+    },
+    size: {
+      value: 0.001,
+      min: 0.001,
+      max: 0.5,
+      step: 0.001,
+    },
+    dispersion: {
       value: 3,
       min: 1,
       max: 20,
@@ -72,9 +84,11 @@ export default function Shader() {
     )
 
     meshRef.current.material.uniforms.uTime.value = time * speed
-    meshRef.current.material.uniforms.dispersionOffset.value = dispersionOffset
-    meshRef.current.material.uniforms.IOR.value = IOR
-    meshRef.current.material.uniforms.count.value = count
+    meshRef.current.material.uniforms.uReflection.value = reflection
+    meshRef.current.material.uniforms.uSpeed.value = speed
+    meshRef.current.material.uniforms.uIOR.value = IOR
+    meshRef.current.material.uniforms.uCount.value = count
+    meshRef.current.material.uniforms.uSize.value = size
 
     // Tie lens to the pointer
     // getCurrentViewport gives us the width & height that would fill the screen in threejs units
@@ -118,17 +132,29 @@ export default function Shader() {
         type: "samplerCube",
         value: cubeTexture,
       },
-      dispersionOffset: {
+      uSpeed: {
         type: "f",
-        value: dispersionOffset,
+        value: speed,
       },
-      IOR: {
+      uIOR: {
         type: "f",
         value: IOR,
       },
-      count: {
+      uCount: {
         type: "i",
         value: count,
+      },
+      uReflection: {
+        type: "f",
+        value: reflection,
+      },
+      uSize: {
+        type: "f",
+        value: size,
+      },
+      uDispersion: {
+        type: "f",
+        value: dispersion,
       },
     }),
     [viewport.width, viewport.height, buffer.texture]
