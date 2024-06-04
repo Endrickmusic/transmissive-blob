@@ -36,10 +36,10 @@ export default function Shader() {
     chromaticAbberation,
   } = useControls({
     reflection: {
-      value: 0.0095,
-      min: 0.001,
-      max: 0.04,
-      step: 0.001,
+      value: 1.5,
+      min: 0.01,
+      max: 6.0,
+      step: 0.1,
     },
     speed: {
       value: 1.0,

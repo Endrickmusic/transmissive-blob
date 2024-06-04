@@ -148,7 +148,7 @@ color /= float( LOOP );
         // color = texture2D(uTexture, uv + refractVec.xy).rgb;
 
         // fresnel
-        float fresnel = pow(1. + dot(rd, nor), 1.5);
+        float fresnel = pow(1. + dot(rd, nor), uReflection);
 
         color = mix(color, refOutside, fresnel); 
         
