@@ -36,10 +36,12 @@ float sphere(in vec3 p, in float r) {
     // d += sin(p.x * 8. + uTime) * 0.1;
 
     // texture displacement
-    vec2 uv = vec2(atan(p.x, p.z) / TWO_PI, p.y / 5.);
-    float disp = texture2D(uNoiseTexture, uv).r;
-
-    d -= disp * 0.5;
+    // vec2 uv = vec2(atan(p.x, p.z) / TWO_PI, p.y / 5.);
+    vec2 uv = vec2(0.5 + atan(p.z, p.x) / (2.0 * PI), 0.5 - asin(p.y) / PI);
+    float noise = texture2D(uNoiseTexture, uv).r;
+    float displacement = sin(p.x * 3.0 + uTime * 5. + noise) * 0.3;
+    displacement *= smoothstep(0.8, -0.8, p.y); // reduce displacement at the poles
+    d += displacement;
 
     return d;
     }
