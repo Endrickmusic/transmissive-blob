@@ -5,6 +5,7 @@ uniform vec2 uMouse;
 uniform samplerCube iChannel0;
 uniform float progress;
 uniform sampler2D uTexture;
+uniform sampler2D uNoiseTexture;
 uniform vec4 uResolution;
 uniform float uReflection;
 uniform float uSpeed;
@@ -30,7 +31,18 @@ float hash(in float v) { return fract(sin(v)*43237.5324); }
 vec3 hash3(in float v) { return vec3(hash(v), hash(v*99.), hash(v*9999.)); }
 
 float sphere(in vec3 p, in float r) { 
-    return length(p)-r; }
+    float d = length(p)-r; 
+    // sin displacement
+    // d += sin(p.x * 8. + uTime) * 0.1;
+
+    // texture displacement
+    vec2 uv = vec2(atan(p.x, p.z) / TWO_PI, p.y / 5.);
+    float disp = texture2D(uNoiseTexture, uv).r;
+
+    d -= disp * 0.5;
+
+    return d;
+    }
 
 float opSmoothUnion( float d1, float d2, float k ) {
     float h = clamp( 0.5 + 0.5*(d2-d1)/k, 0.0, 1.0 );
@@ -120,20 +132,24 @@ void main()
 
     vec3 color = vec3(0.);
 
+    float iorRatioRed = iorRatio + uDispersion;
+    float iorRatioGreen = iorRatio;
+    float iorRatioBlue = iorRatio - uDispersion;
+
 for ( int i = 0; i < LOOP; i ++ ) {
   float slide = float(i) / float(LOOP) * 0.1;
 
-    vec3 refractVecR = refract(rd, nor, iorRatio + uDispersion);
-    vec3 refractVecG = refract(rd, nor, iorRatio);
-    vec3 refractVecB = refract(rd, nor, iorRatio - uDispersion);
+    vec3 refractVecR = refract(rd, nor, iorRatioRed);
+    vec3 refractVecG = refract(rd, nor, iorRatioGreen);
+    vec3 refractVecB = refract(rd, nor, iorRatioBlue);
 
     // color.r += texture2D(uTexture, uv + refractVecR.xy * (uRefractPower + slide * 1.0) * uChromaticAberration).r;
     // color.g += texture2D(uTexture, uv + refractVecG.xy * (uRefractPower + slide * 2.0) * uChromaticAberration).g;
     // color.b += texture2D(uTexture, uv + refractVecB.xy * (uRefractPower + slide * 3.0) * uChromaticAberration).b;
 
     color.r += texture2D(uTexture, uv + refractVecR.xy * (uRefractPower + slide * 1.0)).r;
-    color.g += texture2D(uTexture, uv + refractVecG.xy * (uRefractPower + slide * 1.0)).g;
-    color.b += texture2D(uTexture, uv + refractVecB.xy * (uRefractPower + slide * 1.0)).b;
+    color.g += texture2D(uTexture, uv + refractVecG.xy * (uRefractPower + slide * 2.0)).g;
+    color.b += texture2D(uTexture, uv + refractVecB.xy * (uRefractPower + slide * 3.0)).b;
 
 }
 
@@ -153,8 +169,8 @@ color /= float( LOOP );
         color = mix(color, refOutside, fresnel); 
         
         // color = vec3(fresnel);
-
-        color = pow(color, vec3(.5545));
+    
+        color = pow(color, vec3(.465));
         gl_FragColor = vec4(color, 1.);
     }
     // gl_FragColor = vec4(.5);

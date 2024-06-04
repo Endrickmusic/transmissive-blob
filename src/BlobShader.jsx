@@ -1,4 +1,4 @@
-import { useCubeTexture, useFBO, Image } from "@react-three/drei"
+import { useCubeTexture, useTexture, useFBO, Image } from "@react-three/drei"
 import { useFrame, useThree } from "@react-three/fiber"
 import { useRef, useMemo, useEffect, useCallback } from "react"
 import { useControls } from "leva"
@@ -19,6 +19,8 @@ export default function Shader() {
   const updateMousePosition = useCallback((e) => {
     mousePosition.current = { x: e.pageX, y: e.pageY }
   }, [])
+
+  const noiseTexture = useTexture("./textures/noise.png")
 
   const cubeTexture = useCubeTexture(
     ["px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png"],
@@ -42,13 +44,13 @@ export default function Shader() {
       step: 0.1,
     },
     speed: {
-      value: 1.0,
+      value: 0.5,
       min: 0.01,
       max: 3.0,
       step: 0.01,
     },
     IOR: {
-      value: 0.9,
+      value: 0.84,
       min: 0.01,
       max: 2.0,
       step: 0.01,
@@ -60,13 +62,13 @@ export default function Shader() {
       step: 1,
     },
     size: {
-      value: 0.001,
+      value: 0.005,
       min: 0.001,
       max: 0.5,
       step: 0.001,
     },
     dispersion: {
-      value: 0.05,
+      value: 0.03,
       min: 0.0,
       max: 0.1,
       step: 0.001,
@@ -154,6 +156,10 @@ export default function Shader() {
       uTexture: {
         type: "sampler2D",
         value: buffer.texture,
+      },
+      uNoiseTexture: {
+        type: "sampler2D",
+        value: noiseTexture,
       },
       iChannel0: {
         type: "samplerCube",
