@@ -13,7 +13,7 @@ float PI = 3.141592;
 
 void main() {
 
-      vec4 worldPos = modelMatrix * vec4(position, 1.0);
+    vec4 worldPos = modelMatrix * vec4(position, 1.0);
     vec4 modelPosition = modelMatrix * vec4(position, 1.0);
     
     vec4 viewPosition = viewMatrix * modelPosition;

@@ -25,7 +25,16 @@ export default function Shader() {
     { path: "./cubemap/potsdamer_platz/" }
   )
 
-  const { reflection, speed, IOR, count, size, dispersion } = useControls({
+  const {
+    reflection,
+    speed,
+    IOR,
+    count,
+    size,
+    dispersion,
+    refract,
+    chromaticAbberation,
+  } = useControls({
     reflection: {
       value: 0.0095,
       min: 0.001,
@@ -39,9 +48,9 @@ export default function Shader() {
       step: 0.01,
     },
     IOR: {
-      value: 0.5,
+      value: 0.9,
       min: 0.01,
-      max: 1.0,
+      max: 2.0,
       step: 0.01,
     },
     count: {
@@ -57,10 +66,22 @@ export default function Shader() {
       step: 0.001,
     },
     dispersion: {
-      value: 3,
-      min: 1,
-      max: 20,
-      step: 1,
+      value: 0.05,
+      min: 0.0,
+      max: 0.1,
+      step: 0.001,
+    },
+    refract: {
+      value: 0.15,
+      min: 0.0,
+      max: 2.0,
+      step: 0.1,
+    },
+    chromaticAbberation: {
+      value: 0.5,
+      min: 0.0,
+      max: 5.0,
+      step: 0.1,
     },
   })
 
@@ -89,6 +110,10 @@ export default function Shader() {
     meshRef.current.material.uniforms.uIOR.value = IOR
     meshRef.current.material.uniforms.uCount.value = count
     meshRef.current.material.uniforms.uSize.value = size
+    meshRef.current.material.uniforms.uDispersion.value = dispersion
+    meshRef.current.material.uniforms.uRefractPower.value = refract
+    meshRef.current.material.uniforms.uChromaticAbberation.value =
+      chromaticAbberation
 
     // Tie lens to the pointer
     // getCurrentViewport gives us the width & height that would fill the screen in threejs units
@@ -122,9 +147,11 @@ export default function Shader() {
       },
       uResolution: {
         type: "v2",
-        value: new Vector2(viewport.width, viewport.height),
+        value: new Vector2(viewport.width, viewport.height).multiplyScalar(
+          Math.min(window.devicePixelRatio, 2)
+        ),
       },
-      texture01: {
+      uTexture: {
         type: "sampler2D",
         value: buffer.texture,
       },
@@ -155,6 +182,14 @@ export default function Shader() {
       uDispersion: {
         type: "f",
         value: dispersion,
+      },
+      uRefractPower: {
+        type: "f",
+        value: refract,
+      },
+      uChromaticAbberation: {
+        type: "f",
+        value: chromaticAbberation,
       },
     }),
     [viewport.width, viewport.height, buffer.texture]

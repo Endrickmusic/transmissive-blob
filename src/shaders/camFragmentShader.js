@@ -4,7 +4,7 @@ uniform float uTime;
 uniform vec2 uMouse;
 uniform samplerCube iChannel0;
 uniform float progress;
-uniform sampler2D texture01;
+uniform sampler2D uTexture;
 uniform vec4 uResolution;
 uniform float uReflection;
 uniform float uSpeed;
@@ -12,6 +12,8 @@ uniform float uIOR;
 uniform int uCount;
 uniform float uSize;
 uniform float uDispersion;
+uniform float uRefractPower;
+uniform float uChromaticAberration;
 
 varying vec2 vUv;
 varying vec3 worldNormal;
@@ -20,6 +22,7 @@ varying vec3 eyeVector;
 const float PI = 3.14159265359;
 const float HALF_PI = 0.5*PI;
 const float TWO_PI = 2.0*PI;
+const int LOOP = 16;
 
 #define MAX_STEPS 200
 
@@ -75,10 +78,7 @@ void main()
     
     // 
     // vec2 p = (gl_FragCoord.xy * 2. - uResolution.xy) / min(uResolution.x, uResolution.y);
-    vec2 p = vec2(uv * 2. - 1.);
-
-    vec3 color = vec3(0.);
-    
+    vec2 p = vec2(uv * 2. - 1.);    
     
     // ray origin
     vec3 ro = 5. * vec3(cos(uTime * 1.1), 0., sin(uTime * 1.1));
@@ -115,11 +115,37 @@ void main()
         vec3 refOutside = texture2D(iChannel0, ref).rgb;
 
         // refraction
-        vec3 refractVec = refract(eyeVector, nor, iorRatio);
+        // vec3 refractVec = refract(rd, nor, iorRatio);
 
-        vec2 texCoord = ref.xy * 0.5 + 0.5;
+
+    vec3 color = vec3(0.);
+
+for ( int i = 0; i < LOOP; i ++ ) {
+  float slide = float(i) / float(LOOP) * 0.1;
+
+    vec3 refractVecR = refract(rd, nor, iorRatio + uDispersion);
+    vec3 refractVecG = refract(rd, nor, iorRatio);
+    vec3 refractVecB = refract(rd, nor, iorRatio - uDispersion);
+
+    // color.r += texture2D(uTexture, uv + refractVecR.xy * (uRefractPower + slide * 1.0) * uChromaticAberration).r;
+    // color.g += texture2D(uTexture, uv + refractVecG.xy * (uRefractPower + slide * 2.0) * uChromaticAberration).g;
+    // color.b += texture2D(uTexture, uv + refractVecB.xy * (uRefractPower + slide * 3.0) * uChromaticAberration).b;
+
+    color.r += texture2D(uTexture, uv + refractVecR.xy * (uRefractPower + slide * 1.0)).r;
+    color.g += texture2D(uTexture, uv + refractVecG.xy * (uRefractPower + slide * 1.0)).g;
+    color.b += texture2D(uTexture, uv + refractVecB.xy * (uRefractPower + slide * 1.0)).b;
+
+}
+
+// Divide by the number of layers to normalize colors (rgb values can be worth up to the value of LOOP)
+color /= float( LOOP );
+
+//...
+
+
+        // vec2 texCoord = ref.xy * 0.5 + 0.5;
         // color = texture2D(texture01, texCoord).rgb;
-        color = texture2D(texture01, uv + refractVec.xy).rgb;
+        // color = texture2D(uTexture, uv + refractVec.xy).rgb;
 
         // fresnel
         float fresnel = pow(1. + dot(rd, nor), 1.5);
