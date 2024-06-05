@@ -87,23 +87,10 @@ mat3 lookAt(in vec3 eye, in vec3 tar, in float r) {
 void main()
 {
     float iorRatio = uIOR;
-
-    // vec2 uv = gl_FragCoord.xy / uResolution.xy;
     
     // UVs
     vec2 uv = vUv;
-    
-    // 
-    // vec2 p = (gl_FragCoord.xy * 2. - uResolution.xy) / min(uResolution.x, uResolution.y);
     vec2 p = vec2(uv * 2. - 1.);    
-    
-    // // ray origin
-    // vec3 ro = 5. * vec3(cos(uTime * 1.1), 0., sin(uTime * 1.1));
-    
-    // ro = vec3(0., 0., 6.);
-    
-    // // ray direction
-    // vec3 rd = normalize(lookAt(ro, vec3(0.), 0.) * vec3(p,  2.));
 
     vec3 ro = uCamPos;
     vec3 rd = (uCamInverseProjMat * vec4(uv * 2.0 - 1.0, 0.0, 1.0)).xyz;
