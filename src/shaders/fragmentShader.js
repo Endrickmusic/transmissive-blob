@@ -160,6 +160,7 @@ float PI = 3.1415926;
 		col = mix(col, dispersion, (abs(n.x) + abs(n.y)) * 0.3);
 		
 		if (d > MAX_DIST) { 
+			
             // Set the alpha to 0 for parts outside the raymarched object
             gl_FragColor = vec4(1.,1.,1.,0.0);
         } else {

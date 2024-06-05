@@ -13,17 +13,13 @@ float PI = 3.141592;
 
 void main() {
 
-    vec4 worldPos = modelMatrix * vec4(position, 1.0);
-    vec4 modelPosition = modelMatrix * vec4(position, 1.0);
+    vec4 worldPosition = modelViewMatrix * vec4(position, 1.0);
+    vec3 viewDirection = normalize(-worldPosition.xyz);
     
-    vec4 viewPosition = viewMatrix * modelPosition;
-    vec4 projectedPosition = projectionMatrix * viewPosition;
-    gl_Position = projectedPosition;
+    // Output vertex position
+    gl_Position = projectionMatrix * worldPosition;
     vUv = uv;
-    vec3 transformedNormal = normalMatrix * normal;
-    worldNormal = normalize(transformedNormal);
 
-    eyeVector = normalize(worldPos.xyz - cameraPosition);
 }
 
 `

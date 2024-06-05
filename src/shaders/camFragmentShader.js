@@ -16,9 +16,12 @@ uniform float uDispersion;
 uniform float uRefractPower;
 uniform float uChromaticAberration;
 
+uniform vec3 uCamPos;
+uniform mat4 uCamToWorldMat;
+uniform mat4 uCamInverseProjMat;
+
 varying vec2 vUv;
 varying vec3 worldNormal;
-varying vec3 eyeVector;
 
 const float PI = 3.14159265359;
 const float HALF_PI = 0.5*PI;
@@ -94,15 +97,19 @@ void main()
     // vec2 p = (gl_FragCoord.xy * 2. - uResolution.xy) / min(uResolution.x, uResolution.y);
     vec2 p = vec2(uv * 2. - 1.);    
     
-    // ray origin
-    vec3 ro = 5. * vec3(cos(uTime * 1.1), 0., sin(uTime * 1.1));
+    // // ray origin
+    // vec3 ro = 5. * vec3(cos(uTime * 1.1), 0., sin(uTime * 1.1));
     
-    ro = vec3(0., 0., 6.);
+    // ro = vec3(0., 0., 6.);
     
-    // ray direction
-    vec3 rd = normalize(lookAt(ro, vec3(0.), 0.) * vec3(p,  2.));
+    // // ray direction
+    // vec3 rd = normalize(lookAt(ro, vec3(0.), 0.) * vec3(p,  2.));
 
-    
+    vec3 ro = uCamPos;
+    vec3 rd = (uCamInverseProjMat * vec4(uv * 2.0 - 1.0, 0.0, 1.0)).xyz;
+    rd = (uCamToWorldMat * vec4(rd, 0.0)).xyz;
+    rd = normalize(rd);
+
     vec2 tmm = vec2(0., 10.);
     float t = 0.;
     for(int i = 0; i < MAX_STEPS; i++) {

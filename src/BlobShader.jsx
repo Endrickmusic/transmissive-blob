@@ -1,18 +1,31 @@
-import { useCubeTexture, useTexture, useFBO, Image } from "@react-three/drei"
+import {
+  useCubeTexture,
+  useTexture,
+  useFBO,
+  Image,
+  OrbitControls,
+} from "@react-three/drei"
 import { useFrame, useThree } from "@react-three/fiber"
 import { useRef, useMemo, useEffect, useCallback } from "react"
 import { useControls } from "leva"
 
 import vertexShader from "./shaders/vertexShader.js"
 import fragmentShader from "./shaders/camFragmentShader.js"
-import { DoubleSide, Vector2 } from "three"
+import { Vector2, Vector3, MathUtils } from "three"
 
 export default function Shader() {
   const meshRef = useRef()
   const buffer = useFBO()
-  // const texture01 = useTexture("./textures/clouds_02.png")
   const viewport = useThree((state) => state.viewport)
   const scene = useThree((state) => state.scene)
+  const camera = useThree((state) => state.camera)
+
+  const nearPlaneWidth =
+    camera.near *
+    Math.tan(MathUtils.degToRad(camera.fov / 2)) *
+    camera.aspect *
+    2
+  const nearPlaneHeight = nearPlaneWidth / camera.aspect
 
   const mousePosition = useRef({ x: 0, y: 0 })
 
@@ -95,6 +108,8 @@ export default function Shader() {
     }
   }, [updateMousePosition])
 
+  let cameraForwardPos = new Vector3(0, 0, -1)
+
   useFrame((state) => {
     let time = state.clock.getElapsedTime()
 
@@ -117,14 +132,15 @@ export default function Shader() {
     meshRef.current.material.uniforms.uChromaticAbberation.value =
       chromaticAbberation
 
-    // Tie lens to the pointer
-    // getCurrentViewport gives us the width & height that would fill the screen in threejs units
-    // By giving it a target coordinate we can offset these bounds, for instance width/height for a plane that
-    // sits 15 units from 0/0/0 towards the camera (which is where the lens is)
-    const viewportFBO = state.viewport.getCurrentViewport(
-      state.camera,
-      [0, 0, 15]
-    )
+    cameraForwardPos = camera.position
+      .clone()
+      .add(
+        camera
+          .getWorldDirection(new Vector3(0, 0, 0))
+          .multiplyScalar(camera.near)
+      )
+    meshRef.current.position.copy(cameraForwardPos)
+    meshRef.current.rotation.copy(camera.rotation)
 
     // This is entirely optional but spares us one extra render of the scene
     // The createPortal below will mount the children of <Lens> into the new THREE.Scene above
@@ -139,6 +155,9 @@ export default function Shader() {
   // Define the shader uniforms with memoization to optimize performance
   const uniforms = useMemo(
     () => ({
+      uCamPos: { value: camera.position },
+      uCamToWorldMat: { value: camera.matrixWorld },
+      uCamInverseProjMat: { value: camera.projectionMatrixInverse },
       uTime: {
         type: "f",
         value: 1.0,
@@ -203,20 +222,18 @@ export default function Shader() {
 
   return (
     <>
-      {/* <Image url="./images/clouds.jpg" scale={2} /> */}
-
+      <OrbitControls />
       <mesh position={[0, 0.5, -4]} rotation={[2, 4, 1]}>
         <boxGeometry />
         <meshNormalMaterial />
       </mesh>
 
-      <mesh ref={meshRef} scale={[viewport.width, viewport.height, 1]}>
+      <mesh ref={meshRef} scale={[nearPlaneWidth, nearPlaneHeight, 1]}>
         <planeGeometry args={[1, 1]} />
         <shaderMaterial
           uniforms={uniforms}
           vertexShader={vertexShader}
           fragmentShader={fragmentShader}
-          side={DoubleSide}
           transparent={true}
         />
       </mesh>
