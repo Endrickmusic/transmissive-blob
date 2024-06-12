@@ -101,6 +101,8 @@ export default function Shader() {
   })
 
   useEffect(() => {
+    console.log(camera.projectionMatrixInverse)
+    console.log(camera.matrixWorld)
     window.addEventListener("mousemove", updateMousePosition, false)
     console.log("mousePosition", mousePosition)
     return () => {
@@ -132,15 +134,18 @@ export default function Shader() {
     meshRef.current.material.uniforms.uChromaticAbberation.value =
       chromaticAbberation
 
-    cameraForwardPos = camera.position
-      .clone()
-      .add(
-        camera
-          .getWorldDirection(new Vector3(0, 0, 0))
-          .multiplyScalar(camera.near)
-      )
-    meshRef.current.position.copy(cameraForwardPos)
-    meshRef.current.rotation.copy(camera.rotation)
+    // cameraForwardPos = camera.position
+    //   .clone()
+    //   .add(
+    //     camera
+    //       .getWorldDirection(new Vector3(0, 0, 0))
+    //       .multiplyScalar(camera.near)
+    //   )
+    // meshRef.current.position.copy(cameraForwardPos)
+    // meshRef.current.rotation.copy(camera.rotation)
+
+    console.log("cameraForwardPos", cameraForwardPos)
+    console.log("camera.position", camera.position)
 
     // This is entirely optional but spares us one extra render of the scene
     // The createPortal below will mount the children of <Lens> into the new THREE.Scene above
@@ -228,13 +233,13 @@ export default function Shader() {
         <meshNormalMaterial />
       </mesh>
 
-      <mesh ref={meshRef} scale={[nearPlaneWidth, nearPlaneHeight, 1]}>
-        <planeGeometry args={[1, 1]} />
+      <mesh ref={meshRef} scale={[1, 1, 1]}>
+        <boxGeometry args={[1, 1, 1]} />
         <shaderMaterial
           uniforms={uniforms}
           vertexShader={vertexShader}
           fragmentShader={fragmentShader}
-          transparent={true}
+          transparent={false}
         />
       </mesh>
     </>

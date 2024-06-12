@@ -1,15 +1,6 @@
 const vertexShader = `
-attribute vec4 vertexPosition;
-
-uniform float uTime;
 
 varying vec2 vUv;
-varying vec3 vColor;
-varying vec3 worldNormal;
-varying vec3 eyeVector;
-
-float PI = 3.141592;
-
 
 void main() {
 

@@ -147,6 +147,10 @@ for ( int i = 0; i < LOOP; i ++ ) {
     color.g += texture2D(uTexture, uv + refractVecG.xy * (uRefractPower + slide * 2.0)).g;
     color.b += texture2D(uTexture, uv + refractVecB.xy * (uRefractPower + slide * 3.0)).b;
 
+    // color.r = 1. - color.r;
+    // color.g = color.g - 0.2;
+    // color.b = color.b - 0.1;
+
 }
 
 // Divide by the number of layers to normalize colors (rgb values can be worth up to the value of LOOP)
@@ -165,11 +169,13 @@ color /= float( LOOP );
         color = mix(color, refOutside, fresnel); 
         
         // color = vec3(fresnel);
+        // color = vec3(refOutside);
     
         color = pow(color, vec3(.465));
         gl_FragColor = vec4(color, 1.);
+        // gl_FragColor = vec4(uv, 0.0, 1.);
     }
-    // gl_FragColor = vec4(.5);
+    // gl_FragColor = vec4(uv, 0.0, 1.0);
 }
 
 `
