@@ -20,8 +20,11 @@ uniform vec3 uCamPos;
 uniform mat4 uCamToWorldMat;
 uniform mat4 uCamInverseProjMat;
 
+uniform mat4 uInverseModelMatrix;
+
 varying vec2 vUv;
 varying vec3 worldNormal;
+varying vec4 vPosition;
 
 const float PI = 3.14159265359;
 const float HALF_PI = 0.5*PI;
@@ -88,14 +91,27 @@ void main()
 {
     float iorRatio = uIOR;
     
-    // UVs
+    // vec2 uv = fragment(std::getVertexTexCoord());
     vec2 uv = vUv;
-    vec2 p = vec2(uv * 2. - 1.);    
+    vec4 p = vPosition; 
+    
+    
+    // vec2 p = vec2(uv * 2. - 1.);  
 
-    vec3 ro = uCamPos;
-    vec3 rd = (uCamInverseProjMat * vec4(uv * 2.0 - 1.0, 0.0, 1.0)).xyz;
-    rd = (uCamToWorldMat * vec4(rd, 0.0)).xyz;
-    rd = normalize(rd);
+    // // Thanks @alwayscodingsomething for the matrix help
+    mat4 im = uInverseModelMatrix;
+    vec4 cam = vec4(uCamPos, 1.0);
+    vec4 oro = im * cam;
+    vec3 ro = oro.xyz;
+    vec3 rd = normalize(p.xyz - ro);
+
+    // UVs
+      
+
+    // vec3 ro = uCamPos;
+    // vec3 rd = (uCamInverseProjMat * vec4(uv * 2.0 - 1.0, 0.0, 1.0)).xyz;
+    // rd = (uCamToWorldMat * vec4(rd, 0.0)).xyz;
+    // rd = normalize(rd);
 
     vec2 tmm = vec2(0., 10.);
     float t = 0.;

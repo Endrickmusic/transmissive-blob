@@ -1,6 +1,7 @@
 const vertexShader = `
 
 varying vec2 vUv;
+varying vec4 vPosition;
 
 void main() {
 
@@ -10,6 +11,7 @@ void main() {
     // Output vertex position
     gl_Position = projectionMatrix * worldPosition;
     vUv = uv;
+    vPosition = worldPosition;
 
 }
 

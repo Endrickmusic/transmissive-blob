@@ -163,6 +163,7 @@ export default function Shader() {
       uCamPos: { value: camera.position },
       uCamToWorldMat: { value: camera.matrixWorld },
       uCamInverseProjMat: { value: camera.projectionMatrixInverse },
+      uInverseModelMat: { value: camera.modelMatrixInverse },
       uTime: {
         type: "f",
         value: 1.0,
