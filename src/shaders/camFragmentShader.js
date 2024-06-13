@@ -37,7 +37,7 @@ float hash(in float v) { return fract(sin(v)*43237.5324); }
 vec3 hash3(in float v) { return vec3(hash(v), hash(v*99.), hash(v*9999.)); }
 
 float sphere(in vec3 p, in float r) { 
-    float d = length(p)-r; 
+    float d = length(p) - r; 
     // sin displacement
     // d += sin(p.x * 8. + uTime) * 0.1;
 
@@ -45,7 +45,8 @@ float sphere(in vec3 p, in float r) {
     // vec2 uv = vec2(atan(p.x, p.z) / TWO_PI, p.y / 5.);
     vec2 uv = vec2(0.5 + atan(p.z, p.x) / (2.0 * PI), 0.5 - asin(p.y) / PI);
     float noise = texture2D(uNoiseTexture, uv).r;
-    float displacement = sin(p.x * 3.0 + uTime * 5. + noise) * 0.3;
+    float displacement = sin(p.x * 3.0 + uTime * 1. + noise) * 0.001
+    ;
     displacement *= smoothstep(0.8, -0.8, p.y); // reduce displacement at the poles
     d += displacement;
 
@@ -62,9 +63,9 @@ float opSmoothUnion( float d1, float d2, float k ) {
 float map(in vec3 p) {
   float res = 1e5;
   for(int i=0; i<BALL_NUM; i++) {
-    float fi = float(i) + 1.;
-    float r = uSize + 0.8 * hash(fi);
-    vec3 offset = 1.1 * sin(hash3(fi) * uTime);
+    float fi = float(i) + 0.01;
+    float r = uSize * 0.00008 * hash(fi);
+    vec3 offset = 0.1 * sin(hash3(fi) * uTime);
     res = opSmoothUnion(res, sphere(p-offset, r), 0.75);
   }
   return res;
@@ -91,7 +92,6 @@ void main()
 {
     float iorRatio = uIOR;
     
-    // vec2 uv = fragment(std::getVertexTexCoord());
     vec2 uv = vUv;
     vec4 p = vPosition; 
     
@@ -119,8 +119,8 @@ void main()
 
         float tmp = map(ro + rd * t);
         
-        if(tmp < 0.001 || tmm.y < t) break;
-        t += tmp * 0.7;
+        if(tmp < 0.01 || tmm.y < t) break;
+        t += tmp * 0.07;
     }
   
     if(tmm.y < t) {

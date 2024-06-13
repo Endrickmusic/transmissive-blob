@@ -1,7 +1,12 @@
 const vertexShader = `
 
+uniform vec3 uCamPos;
+uniform mat4 uInverseModelMatrix;
+
 varying vec2 vUv;
 varying vec4 vPosition;
+varying vec4 vRayOrigin;
+varying vec3 vHitPos;
 
 void main() {
 
@@ -12,7 +17,9 @@ void main() {
     gl_Position = projectionMatrix * worldPosition;
     vUv = uv;
     vPosition = worldPosition;
-
+    vRayOrigin = vec4(uCamPos, 1.0) * uInverseModelMatrix;
+    // vHitPos = worldPosition.xyz;
+    vHitPos = position;
 }
 
 `

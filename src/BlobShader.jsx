@@ -10,8 +10,8 @@ import { useRef, useMemo, useEffect, useCallback } from "react"
 import { useControls } from "leva"
 
 import vertexShader from "./shaders/vertexShader.js"
-import fragmentShader from "./shaders/camFragmentShader.js"
-import { Vector2, Vector3, MathUtils } from "three"
+import fragmentShader from "./shaders/fragmentShader.js"
+import { Vector2, Vector3, MathUtils, Matrix4 } from "three"
 
 export default function Shader() {
   const meshRef = useRef()
@@ -75,10 +75,10 @@ export default function Shader() {
       step: 1,
     },
     size: {
-      value: 0.005,
-      min: 0.001,
-      max: 0.5,
-      step: 0.001,
+      value: 1.0,
+      min: 0.01,
+      max: 2.5,
+      step: 0.01,
     },
     dispersion: {
       value: 0.03,
@@ -101,8 +101,12 @@ export default function Shader() {
   })
 
   useEffect(() => {
-    console.log(camera.projectionMatrixInverse)
-    console.log(camera.matrixWorld)
+    const modelMatrix = meshRef.current.matrixWorld // The model matrix of the cube
+    const inverseModelMatrix = new Matrix4().invert(modelMatrix) // The inverse model matrix
+    console.log(inverseModelMatrix)
+  }, [])
+
+  useEffect(() => {
     window.addEventListener("mousemove", updateMousePosition, false)
     console.log("mousePosition", mousePosition)
     return () => {
@@ -134,18 +138,8 @@ export default function Shader() {
     meshRef.current.material.uniforms.uChromaticAbberation.value =
       chromaticAbberation
 
-    // cameraForwardPos = camera.position
-    //   .clone()
-    //   .add(
-    //     camera
-    //       .getWorldDirection(new Vector3(0, 0, 0))
-    //       .multiplyScalar(camera.near)
-    //   )
-    // meshRef.current.position.copy(cameraForwardPos)
-    // meshRef.current.rotation.copy(camera.rotation)
-
-    console.log("cameraForwardPos", cameraForwardPos)
-    console.log("camera.position", camera.position)
+    // console.log("camera.position", camera.position)
+    console.log("modelMatrixInverse", camera.modelMatrixInverse)
 
     // This is entirely optional but spares us one extra render of the scene
     // The createPortal below will mount the children of <Lens> into the new THREE.Scene above
@@ -163,7 +157,9 @@ export default function Shader() {
       uCamPos: { value: camera.position },
       uCamToWorldMat: { value: camera.matrixWorld },
       uCamInverseProjMat: { value: camera.projectionMatrixInverse },
-      uInverseModelMat: { value: camera.modelMatrixInverse },
+      uInverseModelMat: {
+        value: new Matrix4(),
+      },
       uTime: {
         type: "f",
         value: 1.0,
@@ -229,18 +225,19 @@ export default function Shader() {
   return (
     <>
       <OrbitControls />
+
       <mesh position={[0, 0.5, -4]} rotation={[2, 4, 1]}>
         <boxGeometry />
         <meshNormalMaterial />
       </mesh>
 
-      <mesh ref={meshRef} scale={[1, 1, 1]}>
+      <mesh ref={meshRef} scale={[1, 1, 1]} position={[0, 0, 0]}>
         <boxGeometry args={[1, 1, 1]} />
         <shaderMaterial
           uniforms={uniforms}
           vertexShader={vertexShader}
           fragmentShader={fragmentShader}
-          transparent={false}
+          transparent={true}
         />
       </mesh>
     </>

@@ -110,6 +110,5 @@ void main() {
     }
 
     // Output to screen
-    // fragColor = vec4(col, 1.0);
-    fragColor = vec4(uv, 0.0, 1.0);
+    fragColor = vec4(col, 1.0);
 }
