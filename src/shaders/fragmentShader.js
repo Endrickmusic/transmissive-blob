@@ -24,7 +24,7 @@ float PI = 3.1415926;
 float GetDist(vec3 p) {
 
 	float d = length(p) - 1.; // sphere
-	d = length(vec2(length(p.xz) - .5, p.y)) - .1;
+	d = length(vec2(length(p.xz) - .4, p.y)) - .1;
 	return d;
 }
 
@@ -60,12 +60,13 @@ vec3 GetNormal(vec3 p) {
 
 		vec3 col = vec3(0.0);
 
-		if ( d < MAX_DIST ) {
+		if ( d >= MAX_DIST )
+			discard;
+		else {
 			vec3 p = ro + rd * d;
 			vec3 n = GetNormal(p);
 			col.rgb = n;
 		}
-
         gl_FragColor = vec4(col, 1.0);
         // gl_FragColor = vec4(rd, 1.0);
 	}

@@ -112,6 +112,7 @@ export default function Shader() {
       setWorldToObjectMatrix(inverseMatrix)
       console.log("World to Object Matrix:", inverseMatrix)
       meshRef.current.material.uniforms.uInverseModelMat.value = inverseMatrix
+      meshRef.current.updateMatrixWorld()
     }
   }, [
     meshRef.current?.position,
@@ -133,7 +134,6 @@ export default function Shader() {
     let time = state.clock.getElapsedTime()
 
     if (meshRef.current) {
-      meshRef.current.updateMatrixWorld()
     }
 
     // Update the uniform
