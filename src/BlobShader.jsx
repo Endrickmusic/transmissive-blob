@@ -101,12 +101,6 @@ export default function Shader() {
   })
 
   useEffect(() => {
-    const modelMatrix = meshRef.current.matrixWorld // The model matrix of the cube
-    const inverseModelMatrix = new Matrix4().invert(modelMatrix) // The inverse model matrix
-    console.log(inverseModelMatrix)
-  }, [])
-
-  useEffect(() => {
     window.addEventListener("mousemove", updateMousePosition, false)
     console.log("mousePosition", mousePosition)
     return () => {
@@ -119,8 +113,22 @@ export default function Shader() {
   useFrame((state) => {
     let time = state.clock.getElapsedTime()
 
-    // console.log("mousePosition", mousePosition.current)
+    if (meshRef.current) {
+      // Update the model matrix
+      meshRef.current.matrixWorld.needsUpdate = true
 
+      // Calculate the inverse model matrix
+      const inverseModelMatrix = new Matrix4()
+      inverseModelMatrix.invert(meshRef.current.matrixWorld) // The inverse model matrix
+
+      console.log(inverseModelMatrix)
+
+      // Update the uniform
+      meshRef.current.material.uniforms.uInverseModelMat.value =
+        inverseModelMatrix
+    }
+
+    meshRef.current.material.uniforms.uCamPos.value = camera.position
     // meshRef.current.material.uniforms.uMouse.value = new Vector2(0, 0)
     meshRef.current.material.uniforms.uMouse.value = new Vector2(
       mousePosition.current.x,
@@ -138,17 +146,11 @@ export default function Shader() {
     meshRef.current.material.uniforms.uChromaticAbberation.value =
       chromaticAbberation
 
-    // console.log("camera.position", camera.position)
-    console.log("modelMatrixInverse", camera.modelMatrixInverse)
-
-    // This is entirely optional but spares us one extra render of the scene
-    // The createPortal below will mount the children of <Lens> into the new THREE.Scene above
-    // The following code will render that scene into a buffer, whose texture will then be fed into
-    // a plane spanning the full screen and the lens transmission material
-    state.gl.setRenderTarget(buffer)
-    state.gl.setClearColor("#d8d7d7")
-    state.gl.render(scene, state.camera)
-    state.gl.setRenderTarget(null)
+    // FBO
+    // state.gl.setRenderTarget(buffer)
+    // state.gl.setClearColor("#d8d7d7")
+    // state.gl.render(scene, state.camera)
+    // state.gl.setRenderTarget(null)
   })
 
   // Define the shader uniforms with memoization to optimize performance
