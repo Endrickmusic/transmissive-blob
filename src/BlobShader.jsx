@@ -6,7 +6,7 @@ import {
   OrbitControls,
 } from "@react-three/drei"
 import { useFrame, useThree } from "@react-three/fiber"
-import { useRef, useMemo, useEffect, useCallback } from "react"
+import { useRef, useMemo, useEffect, useCallback, useState } from "react"
 import { useControls } from "leva"
 
 import vertexShader from "./shaders/vertexShader.js"
@@ -39,6 +39,8 @@ export default function Shader() {
     ["px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png"],
     { path: "./cubemap/potsdamer_platz/" }
   )
+
+  const [worldToObjectMatrix, setWorldToObjectMatrix] = useState(new Matrix4())
 
   const {
     reflection,
@@ -101,6 +103,23 @@ export default function Shader() {
   })
 
   useEffect(() => {
+    const object = meshRef.current
+
+    if (object) {
+      object.updateMatrixWorld()
+      const worldMatrix = object.matrixWorld
+      const inverseMatrix = new Matrix4().copy(worldMatrix).invert()
+      setWorldToObjectMatrix(inverseMatrix)
+      console.log("World to Object Matrix:", inverseMatrix)
+      meshRef.current.material.uniforms.uInverseModelMat.value = inverseMatrix
+    }
+  }, [
+    meshRef.current?.position,
+    meshRef.current?.rotation,
+    meshRef.current?.scale,
+  ])
+
+  useEffect(() => {
     window.addEventListener("mousemove", updateMousePosition, false)
     console.log("mousePosition", mousePosition)
     return () => {
@@ -114,22 +133,14 @@ export default function Shader() {
     let time = state.clock.getElapsedTime()
 
     if (meshRef.current) {
-      // Update the model matrix
-      meshRef.current.matrixWorld.needsUpdate = true
-
-      // Calculate the inverse model matrix
-      const inverseModelMatrix = new Matrix4()
-      inverseModelMatrix.invert(meshRef.current.matrixWorld) // The inverse model matrix
-
-      console.log(inverseModelMatrix)
-
-      // Update the uniform
-      meshRef.current.material.uniforms.uInverseModelMat.value =
-        inverseModelMatrix
+      meshRef.current.updateMatrixWorld()
     }
+
+    // Update the uniform
 
     meshRef.current.material.uniforms.uCamPos.value = camera.position
     // meshRef.current.material.uniforms.uMouse.value = new Vector2(0, 0)
+
     meshRef.current.material.uniforms.uMouse.value = new Vector2(
       mousePosition.current.x,
       mousePosition.current.y
