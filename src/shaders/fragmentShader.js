@@ -14,6 +14,8 @@ uniform float uDispersion;
 uniform float uRefractPower;
 uniform float uChromaticAberration;
 uniform sampler2D uTexture;
+uniform samplerCube iChannel0;
+uniform float uReflection;
 
 varying vec2 vUv;
 varying vec4 vPosition;
@@ -62,7 +64,7 @@ float GetDist(vec3 p) {
 		float r = uSize * 0.1;
 		// float r = uSize * 0.1 * hash(fi);
 		vec3 offset = .5 * sin(hash3(fi)) * cos(uTime + float(i));
-		d = opSmoothUnion(d, sphere(p - offset, r), 0.24);
+		d = opSmoothUnion(d, sphere(p - offset, r), 0.3);
 	}
 	return d;
 }
@@ -93,8 +95,8 @@ vec3 GetNormal(in vec3 p) {
 
 		float iorRatio = uIOR;
 		vec2 uv = vUv - 0.5;
-		vec3 ro = vRayOrigin.xyz; //vec3(0., 0., -3.);
-		vec3 rd = normalize(vHitPos - ro); //normalize(vec3(uv, 1.));
+		vec3 ro = vRayOrigin.xyz;
+		vec3 rd = normalize(vHitPos - ro); 
 
 		float d = Raymarch(ro, rd);
 
@@ -105,6 +107,9 @@ vec3 GetNormal(in vec3 p) {
 		else {
 			vec3 p = ro + rd * d;
 			vec3 n = GetNormal(p);
+
+			vec3 ref = reflect(rd, n);
+        	vec3 refOutside = texture2D(iChannel0, ref).rgb;
 
 			float iorRatioRed = iorRatio + uDispersion;
     		float iorRatioGreen = iorRatio;
@@ -121,10 +126,14 @@ vec3 GetNormal(in vec3 p) {
 				color.r += texture2D(uTexture, uv + refractVecR.xy * (uRefractPower + slide * 1.0)).r;
 				color.g += texture2D(uTexture, uv + refractVecG.xy * (uRefractPower + slide * 2.0)).g;
 				color.b += texture2D(uTexture, uv + refractVecB.xy * (uRefractPower + slide * 3.0)).b;
-
 			}
-
 		color /= float( LOOP );
+
+		// fresnel
+        float fresnel = pow(1. + dot(rd, n), uReflection);
+
+        color = mix(color, refOutside, fresnel); 
+        
 		color = pow(color, vec3(.465));
 		gl_FragColor = vec4(color, 1.0);
 		}
