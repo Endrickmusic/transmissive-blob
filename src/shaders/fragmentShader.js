@@ -50,6 +50,16 @@ vec3 GetNormal(vec3 p) {
 	return normalize(n);
 }
 
+// vec3 GetNormal(in vec3 p) {
+// 	vec2 e = vec2(1., -1.) * 1e-3;
+//     return normalize(
+//     	e.xyy * GetDist(p+e.xyy)+
+//     	e.yxy * GetDist(p+e.yxy)+
+//     	e.yyx * GetDist(p+e.yyx)+
+//     	e.xxx * GetDist(p+e.xxx)
+//     );
+// }
+
 	void main() {
 
 		vec2 uv = vUv - 0.5;
