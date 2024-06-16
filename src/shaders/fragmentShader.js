@@ -62,6 +62,7 @@ float opSmoothUnion( float d1, float d2, float k ) {
 
 float GetDist(vec3 p) {
 	float d = 1e5;
+	float plane = p.y + .5;
 	for(int i = 0; i < BALL_NUM; i++) {
 		float fi = float(i) + 0.01;
 		float r = uSize * 0.1;
@@ -69,7 +70,13 @@ float GetDist(vec3 p) {
 		vec3 offset = .5 * sin(hash3(fi)) * cos(uTime + float(i));
 		d = opSmoothUnion(d, sphere(p - offset, r), 0.24);
 	}
+	d = opSmoothUnion(d, plane, 0.1);
 	return d;
+}
+
+bool IsOnPlane(vec3 p) {
+    // Assuming the plane is at y = 0
+    return abs(p.y + .5) < 0.01;
 }
 
 float Raymarch(vec3 ro, vec3 rd) {
@@ -94,6 +101,17 @@ vec3 GetNormal(in vec3 p) {
     );
 }
 
+float GetLight(vec3 p) {
+	vec3 lightPos = vec3(0., 2., 0.);
+	vec3 l = normalize(lightPos - p);
+	vec3 n = GetNormal(p);
+	float dif = clamp(dot(n, l), 0., 1.);
+	float d = Raymarch(p + n * SURF_DIST * 2., l);
+	if (d < length(lightPos - p)) dif *= 0.1;	
+	return dif;
+}
+
+
 	void main() {
 
 		vec2 uv = vUv - 0.5;
@@ -109,7 +127,9 @@ vec3 GetNormal(in vec3 p) {
 		else {
 			vec3 p = ro + rd * d;
 			vec3 n = GetNormal(p);
-			col.rgb = n;
+			// col.rgb = n;
+			float dif = GetLight(p);
+            col = vec3(dif);
 		}
         gl_FragColor = vec4(col, 1.0);
         // gl_FragColor = vec4(rd, 1.0);
