@@ -7,13 +7,17 @@ uniform vec4 uResolution;
 uniform float dispersionOffset;
 uniform float divideFactor;
 uniform int count;
+uniform float uSize;
 
 varying vec2 vUv;
 varying vec4 vPosition;
 varying vec4 vRayOrigin;
 varying vec3 vHitPos;
 
-float PI = 3.1415926;
+const float PI = 3.1415926;
+const float HALF_PI = 0.5 * PI;
+const float TWO_PI = 2.0 * PI;
+const int LOOP = 16;
 
 #define MAX_STEPS 40
 #define MAX_DIST 40.
@@ -21,10 +25,50 @@ float PI = 3.1415926;
 #define samples 32
 #define LOD 
 
-float GetDist(vec3 p) {
+float hash(in float v) { return fract(sin(v)*43237.5324); }
+vec3 hash3(in float v) { return vec3(hash(v), hash(v*99.), hash(v*9999.)); }
 
-	float d = length(p) - 1.; // sphere
-	d = length(vec2(length(p.xz) - .4, p.y)) - .1;
+float sphere(in vec3 p, in float r) { 
+    float d = length(p) - r; 
+
+    // sin displacement
+    // d += sin(p.x * 8. + uTime) * 0.1;
+
+    // texture displacement
+    // vec2 uv = vec2(atan(p.x, p.z) / TWO_PI, p.y / 5.);
+    // vec2 uv = vec2(0.5 + atan(p.z, p.x) / (2.0 * PI), 0.5 - asin(p.y) / PI);
+    // float noise = texture2D(uNoiseTexture, uv).r;
+    // float displacement = sin(p.x * 3.0 + uTime * 1. + noise) * 0.001
+    // ;
+    // displacement *= smoothstep(0.8, -0.8, p.y); // reduce displacement at the poles
+    // d += displacement;
+
+    return d;
+    }
+
+float opSmoothUnion( float d1, float d2, float k ) {
+    float h = clamp( 0.5 + 0.5*(d2-d1)/k, 0.0, 1.0 );
+    return mix( d2, d1, h ) - k*h*(1.0-h);
+}
+
+#define BALL_NUM 5
+
+// float GetDist(vec3 p) {
+
+// 	float d = length(p) - 1.; // sphere
+// 	d = length(vec2(length(p.xz) - .4, p.y)) - .1;
+// 	return d;
+// }
+
+float GetDist(vec3 p) {
+	float d = 1e5;
+	for(int i = 0; i < BALL_NUM; i++) {
+		float fi = float(i) + 0.01;
+		float r = uSize * 0.1;
+		// float r = uSize * 0.1 * hash(fi);
+		vec3 offset = .5 * sin(hash3(fi)) * cos(uTime + float(i));
+		d = opSmoothUnion(d, sphere(p - offset, r), 0.24);
+	}
 	return d;
 }
 
@@ -40,25 +84,15 @@ float Raymarch(vec3 ro, vec3 rd) {
 	return dO;
 }
 
-vec3 GetNormal(vec3 p) {
-	vec2 e = vec2(1e-2, 0.);
-	vec3 n = GetDist(p) - vec3(
-		GetDist(p - e.xyy),
-		GetDist(p - e.yxy),
-		GetDist(p - e.yyx)
-	);
-	return normalize(n);
+vec3 GetNormal(in vec3 p) {
+	vec2 e = vec2(1., -1.) * 1e-3;
+    return normalize(
+    	e.xyy * GetDist(p+e.xyy)+
+    	e.yxy * GetDist(p+e.yxy)+
+    	e.yyx * GetDist(p+e.yyx)+
+    	e.xxx * GetDist(p+e.xxx)
+    );
 }
-
-// vec3 GetNormal(in vec3 p) {
-// 	vec2 e = vec2(1., -1.) * 1e-3;
-//     return normalize(
-//     	e.xyy * GetDist(p+e.xyy)+
-//     	e.yxy * GetDist(p+e.yxy)+
-//     	e.yyx * GetDist(p+e.yyx)+
-//     	e.xxx * GetDist(p+e.xxx)
-//     );
-// }
 
 	void main() {
 

@@ -66,7 +66,7 @@ float map(in vec3 p) {
     float fi = float(i) + 0.01;
     float r = uSize * 0.00008 * hash(fi);
     vec3 offset = 0.1 * sin(hash3(fi) * uTime);
-    res = opSmoothUnion(res, sphere(p-offset, r), 0.75);
+    res = opSmoothUnion(res, sphere(p - offset, r), 0.75);
   }
   return res;
 }

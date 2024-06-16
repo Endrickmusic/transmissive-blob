@@ -78,7 +78,7 @@ export default function Shader() {
     },
     size: {
       value: 1.0,
-      min: 0.01,
+      min: 0.1,
       max: 2.5,
       step: 0.01,
     },
@@ -244,7 +244,7 @@ export default function Shader() {
         <meshNormalMaterial />
       </mesh>
 
-      <mesh ref={meshRef} scale={[1, 1, 1]} position={[0, 0, 0]}>
+      <mesh ref={meshRef} scale={[2, 2, 2]} position={[0, 0, 0]}>
         <boxGeometry args={[1, 1, 1]} />
         <shaderMaterial
           uniforms={uniforms}
