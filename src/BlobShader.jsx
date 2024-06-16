@@ -158,10 +158,10 @@ export default function Shader() {
       chromaticAbberation
 
     // FBO
-    // state.gl.setRenderTarget(buffer)
-    // state.gl.setClearColor("#d8d7d7")
-    // state.gl.render(scene, state.camera)
-    // state.gl.setRenderTarget(null)
+    state.gl.setRenderTarget(buffer)
+    state.gl.setClearColor("#d8d7d7")
+    state.gl.render(scene, state.camera)
+    state.gl.setRenderTarget(null)
   })
 
   // Define the shader uniforms with memoization to optimize performance

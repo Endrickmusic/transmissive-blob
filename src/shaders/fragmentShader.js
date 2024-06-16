@@ -8,6 +8,12 @@ uniform float dispersionOffset;
 uniform float divideFactor;
 uniform int count;
 uniform float uSize;
+uniform sampler2D uNoiseTexture;
+uniform float uIOR;
+uniform float uDispersion;
+uniform float uRefractPower;
+uniform float uChromaticAberration;
+uniform sampler2D uTexture;
 
 varying vec2 vUv;
 varying vec4 vPosition;
@@ -31,17 +37,13 @@ vec3 hash3(in float v) { return vec3(hash(v), hash(v*99.), hash(v*9999.)); }
 float sphere(in vec3 p, in float r) { 
     float d = length(p) - r; 
 
-    // sin displacement
-    // d += sin(p.x * 8. + uTime) * 0.1;
-
     // texture displacement
     // vec2 uv = vec2(atan(p.x, p.z) / TWO_PI, p.y / 5.);
-    // vec2 uv = vec2(0.5 + atan(p.z, p.x) / (2.0 * PI), 0.5 - asin(p.y) / PI);
-    // float noise = texture2D(uNoiseTexture, uv).r;
-    // float displacement = sin(p.x * 3.0 + uTime * 1. + noise) * 0.001
-    // ;
-    // displacement *= smoothstep(0.8, -0.8, p.y); // reduce displacement at the poles
-    // d += displacement;
+    vec2 uv = vec2(0.5 + atan(p.z, p.x) / (2.0 * PI), 0.5 - asin(p.y) / PI);
+    float noise = texture2D(uNoiseTexture, uv).r;
+    float displacement = sin(p.x * 15.0 + uTime * 1. + noise) * 0.05;
+    displacement *= smoothstep(.9, -.1, p.y); // reduce displacement at the poles
+    d += displacement;
 
     return d;
     }
@@ -52,13 +54,6 @@ float opSmoothUnion( float d1, float d2, float k ) {
 }
 
 #define BALL_NUM 5
-
-// float GetDist(vec3 p) {
-
-// 	float d = length(p) - 1.; // sphere
-// 	d = length(vec2(length(p.xz) - .4, p.y)) - .1;
-// 	return d;
-// }
 
 float GetDist(vec3 p) {
 	float d = 1e5;
@@ -96,27 +91,43 @@ vec3 GetNormal(in vec3 p) {
 
 	void main() {
 
+		float iorRatio = uIOR;
 		vec2 uv = vUv - 0.5;
 		vec3 ro = vRayOrigin.xyz; //vec3(0., 0., -3.);
 		vec3 rd = normalize(vHitPos - ro); //normalize(vec3(uv, 1.));
 
 		float d = Raymarch(ro, rd);
 
-		vec3 col = vec3(0.0);
+		vec3 color = vec3(0.0);
 
 		if ( d >= MAX_DIST )
 			discard;
 		else {
 			vec3 p = ro + rd * d;
 			vec3 n = GetNormal(p);
-			col.rgb = n;
+
+			float iorRatioRed = iorRatio + uDispersion;
+    		float iorRatioGreen = iorRatio;
+    		float iorRatioBlue = iorRatio - uDispersion;
+
+			for ( int i = 0; i < LOOP; i ++ ) {
+
+ 				float slide = float(i) / float(LOOP) * 0.1;
+
+				vec3 refractVecR = refract(rd, n, iorRatioRed);
+				vec3 refractVecG = refract(rd, n, iorRatioGreen);
+				vec3 refractVecB = refract(rd, n, iorRatioBlue);
+		
+				color.r += texture2D(uTexture, uv + refractVecR.xy * (uRefractPower + slide * 1.0)).r;
+				color.g += texture2D(uTexture, uv + refractVecG.xy * (uRefractPower + slide * 2.0)).g;
+				color.b += texture2D(uTexture, uv + refractVecB.xy * (uRefractPower + slide * 3.0)).b;
+
+			}
+
+		color /= float( LOOP );
+		color = pow(color, vec3(.465));
+		gl_FragColor = vec4(color, 1.0);
 		}
-        gl_FragColor = vec4(col, 1.0);
-        // gl_FragColor = vec4(rd, 1.0);
 	}
-
-
-
 `
-
 export default fragmentShader
