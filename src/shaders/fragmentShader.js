@@ -28,8 +28,24 @@ const int LOOP = 16;
 float hash(in float v) { return fract(sin(v)*43237.5324); }
 vec3 hash3(in float v) { return vec3(hash(v), hash(v*99.), hash(v*9999.)); }
 
-float sphere(in vec3 p, in float r) { 
-    float d = length(p) - r; 
+struct Surface {
+    float sd; // signed distance value
+    vec3 col; // color
+};
+
+Surface sdSphere(vec3 p, float r, vec3 offset, vec3 col)
+{
+  float d = length(p - offset) - r;
+  return Surface(d, col);
+}
+
+Surface sdFloor(vec3 p, vec3 col) {
+  float d = p.y + 1.;
+  return Surface(d, col);
+}
+
+// float sphere(in vec3 p, in float r) { 
+    // float d = length(p) - r; 
 
     // sin displacement
     // d += sin(p.x * 8. + uTime) * 0.1;
@@ -43,61 +59,78 @@ float sphere(in vec3 p, in float r) {
     // displacement *= smoothstep(0.8, -0.8, p.y); // reduce displacement at the poles
     // d += displacement;
 
-    return d;
-    }
+    // return d;
+    // }
 
 float opSmoothUnion( float d1, float d2, float k ) {
     float h = clamp( 0.5 + 0.5*(d2-d1)/k, 0.0, 1.0 );
     return mix( d2, d1, h ) - k*h*(1.0-h);
 }
 
+Surface minWithColor(Surface obj1, Surface obj2) {
+  if (obj2.sd < obj1.sd) return obj2; // The sd component of the struct holds the "signed distance" value
+  return obj1;
+}
+
+Surface sdScene(vec3 p) {
+  Surface sphereLeft = sdSphere(p, 0.2, vec3(-.5, 0, 0), vec3(0, .8, .8));
+  Surface sphereRight = sdSphere(p, 0.2, vec3(.5, 0, 0), vec3(1, 0.58, 0.29));
+  Surface co = minWithColor(sphereLeft, sphereRight); // co = closest object containing "signed distance" and color
+  co = minWithColor(co, sdFloor(p, vec3(0, 1, 0)));
+  return co;
+}
+
 #define BALL_NUM 5
 
 // float GetDist(vec3 p) {
-
-// 	float d = length(p) - 1.; // sphere
-// 	d = length(vec2(length(p.xz) - .4, p.y)) - .1;
+// 	float d = 1e5;
+// 	float plane = p.y + .5;
+// 	for(int i = 0; i < BALL_NUM; i++) {
+// 		float fi = float(i) + 0.01;
+// 		float r = uSize * 0.1;
+// 		// float r = uSize * 0.1 * hash(fi);
+// 		vec3 offset = .5 * sin(hash3(fi)) * cos(uTime + float(i));
+// 		d = opSmoothUnion(d, sphere(p - offset, r), 0.24);
+// 	}
+// 	d = opSmoothUnion(d, plane, 0.1);
 // 	return d;
 // }
 
-float GetDist(vec3 p) {
-	float d = 1e5;
-	float plane = p.y + .5;
-	for(int i = 0; i < BALL_NUM; i++) {
-		float fi = float(i) + 0.01;
-		float r = uSize * 0.1;
-		// float r = uSize * 0.1 * hash(fi);
-		vec3 offset = .5 * sin(hash3(fi)) * cos(uTime + float(i));
-		d = opSmoothUnion(d, sphere(p - offset, r), 0.24);
-	}
-	d = opSmoothUnion(d, plane, 0.1);
-	return d;
-}
+// float Raymarch(vec3 ro, vec3 rd) {
+// 	float dO = 0.;
+// 	float dS;
+// 	for (int i = 0; i < MAX_STEPS; i++) {
+// 		vec3 p = ro + rd * dO;
+// 		dS = GetDist(p);
+// 		dO += dS;
+// 		if (dS < SURF_DIST || dO > MAX_DIST) break;
+// 	}
+// 	return dO;
+// }
 
-bool IsOnPlane(vec3 p) {
-    // Assuming the plane is at y = 0
-    return abs(p.y + .5) < 0.01;
-}
+Surface Raymarch(vec3 ro, vec3 rd, float start, float end) {
+  float depth = start;
+  Surface co; // closest object
 
-float Raymarch(vec3 ro, vec3 rd) {
-	float dO = 0.;
-	float dS;
-	for (int i = 0; i < MAX_STEPS; i++) {
-		vec3 p = ro + rd * dO;
-		dS = GetDist(p);
-		dO += dS;
-		if (dS < SURF_DIST || dO > MAX_DIST) break;
-	}
-	return dO;
+  for (int i = 0; i < MAX_STEPS; i++) {
+    vec3 p = ro + depth * rd;
+    co = sdScene(p);
+    depth += co.sd;
+    if (co.sd < SURF_DIST || depth > end) break;
+  }
+
+  co.sd = depth;
+
+  return co;
 }
 
 vec3 GetNormal(in vec3 p) {
 	vec2 e = vec2(1., -1.) * 1e-3;
     return normalize(
-    	e.xyy * GetDist(p+e.xyy)+
-    	e.yxy * GetDist(p+e.yxy)+
-    	e.yyx * GetDist(p+e.yyx)+
-    	e.xxx * GetDist(p+e.xxx)
+    	e.xyy * sdScene(p + e.xyy).sd +
+    	e.yxy * sdScene(p + e.yxy).sd +
+    	e.yyx * sdScene(p + e.yyx).sd +
+    	e.xxx * sdScene(p + e.xxx).sd
     );
 }
 
@@ -106,7 +139,7 @@ float GetLight(vec3 p) {
 	vec3 l = normalize(lightPos - p);
 	vec3 n = GetNormal(p);
 	float dif = clamp(dot(n, l), 0., 1.);
-	float d = Raymarch(p + n * SURF_DIST * 2., l);
+	float d = Raymarch(p + n * SURF_DIST * 2., l, 0., MAX_DIST).sd;
 	if (d < length(lightPos - p)) dif *= 0.1;	
 	return dif;
 }
@@ -118,18 +151,19 @@ float GetLight(vec3 p) {
 		vec3 ro = vRayOrigin.xyz; //vec3(0., 0., -3.);
 		vec3 rd = normalize(vHitPos - ro); //normalize(vec3(uv, 1.));
 
-		float d = Raymarch(ro, rd);
+		// float d = Raymarch(ro, rd);
+		Surface co = Raymarch(ro, rd, 0., MAX_DIST);
 
 		vec3 col = vec3(0.0);
 
-		if ( d >= MAX_DIST )
+		if ( co.sd >= MAX_DIST )
 			discard;
 		else {
-			vec3 p = ro + rd * d;
+			vec3 p = ro + rd * co.sd;
 			vec3 n = GetNormal(p);
 			// col.rgb = n;
 			float dif = GetLight(p);
-            col = vec3(dif);
+            col = dif * co.col * .5;
 		}
         gl_FragColor = vec4(col, 1.0);
         // gl_FragColor = vec4(rd, 1.0);
