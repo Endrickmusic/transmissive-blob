@@ -44,6 +44,13 @@ Surface sdFloor(vec3 p, vec3 col) {
   return Surface(d, col);
 }
 
+Surface sdBox( vec3 p, vec3 b, vec3 col)
+{
+  vec3 q = abs(p) - b;
+  float d = length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+  return Surface(d, col);
+}
+
 // float sphere(in vec3 p, in float r) { 
     // float d = length(p) - r; 
 
@@ -76,7 +83,7 @@ Surface sdScene(vec3 p) {
   Surface sphereLeft = sdSphere(p, 0.15, vec3(-.2, 0, 0), vec3(0, .2, .8));
   Surface sphereRight = sdSphere(p, 0.15, vec3(.2, 0, 0), vec3(1, 0.58, 0.29));
   Surface co = minWithColor(sphereLeft, sphereRight); // co = closest object containing "signed distance" and color
-  co = minWithColor(co, sdFloor(p, vec3(.5, .5, .5)));
+  co = minWithColor(co, sdBox(p - vec3(0.,-.5, 0.), vec3(0.5, 0.01, 0.5), vec3(.5, .5, .5)));
   return co;
 }
 
@@ -170,12 +177,12 @@ bool IsOnPlane(vec3 p) {
 			// col.rgb = n;
 			float dif = GetLight(p);
             
-        if (IsOnPlane(p)) {
-            alpha = 0.4 - dif; // alpha is 1.0 in shadow and 0.0 in light
-        } else {
+        // if (IsOnPlane(p)) {
+        //     alpha = 0.4 - dif; // alpha is 1.0 in shadow and 0.0 in light
+        // } else {
             col = dif * co.col * 1.2;
             alpha = 1.0;
-        }
+        // }
 		}
         gl_FragColor = vec4(col, alpha);
         // gl_FragColor = vec4(rd, 1.0);
