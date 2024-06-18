@@ -40,7 +40,7 @@ Surface sdSphere(vec3 p, float r, vec3 offset, vec3 col)
 }
 
 Surface sdFloor(vec3 p, vec3 col) {
-  float d = p.y + 1.;
+  float d = p.y + .5;
   return Surface(d, col);
 }
 
@@ -73,10 +73,10 @@ Surface minWithColor(Surface obj1, Surface obj2) {
 }
 
 Surface sdScene(vec3 p) {
-  Surface sphereLeft = sdSphere(p, 0.2, vec3(-.5, 0, 0), vec3(0, .8, .8));
-  Surface sphereRight = sdSphere(p, 0.2, vec3(.5, 0, 0), vec3(1, 0.58, 0.29));
+  Surface sphereLeft = sdSphere(p, 0.15, vec3(-.2, 0, 0), vec3(0, .2, .8));
+  Surface sphereRight = sdSphere(p, 0.15, vec3(.2, 0, 0), vec3(1, 0.58, 0.29));
   Surface co = minWithColor(sphereLeft, sphereRight); // co = closest object containing "signed distance" and color
-  co = minWithColor(co, sdFloor(p, vec3(0, 1, 0)));
+  co = minWithColor(co, sdFloor(p, vec3(.5, .5, .5)));
   return co;
 }
 
@@ -144,6 +144,11 @@ float GetLight(vec3 p) {
 	return dif;
 }
 
+bool IsOnPlane(vec3 p) {
+    float planeY = 0.5; // replace with the y-coordinate of your plane
+    float epsilon = 0.04; // tolerance for floating point errors
+    return abs(p.y + planeY) < epsilon;
+}
 
 	void main() {
 
@@ -155,6 +160,7 @@ float GetLight(vec3 p) {
 		Surface co = Raymarch(ro, rd, 0., MAX_DIST);
 
 		vec3 col = vec3(0.0);
+    float alpha = 1.0;
 
 		if ( co.sd >= MAX_DIST )
 			discard;
@@ -163,9 +169,15 @@ float GetLight(vec3 p) {
 			vec3 n = GetNormal(p);
 			// col.rgb = n;
 			float dif = GetLight(p);
-            col = dif * co.col * .5;
+            
+        if (IsOnPlane(p)) {
+            alpha = 0.4 - dif; // alpha is 1.0 in shadow and 0.0 in light
+        } else {
+            col = dif * co.col * 1.2;
+            alpha = 1.0;
+        }
 		}
-        gl_FragColor = vec4(col, 1.0);
+        gl_FragColor = vec4(col, alpha);
         // gl_FragColor = vec4(rd, 1.0);
 	}
 
