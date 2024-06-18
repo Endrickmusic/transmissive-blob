@@ -19,7 +19,7 @@ const float HALF_PI = 0.5 * PI;
 const float TWO_PI = 2.0 * PI;
 const int LOOP = 16;
 
-#define MAX_STEPS 40
+#define MAX_STEPS 60
 #define MAX_DIST 40.
 #define SURF_DIST 1e-3
 #define samples 32
@@ -83,7 +83,7 @@ Surface sdScene(vec3 p) {
   Surface sphereLeft = sdSphere(p, 0.15, vec3(-.2, 0, 0), vec3(0, .2, .8));
   Surface sphereRight = sdSphere(p, 0.15, vec3(.2, 0, 0), vec3(1, 0.58, 0.29));
   Surface co = minWithColor(sphereLeft, sphereRight); // co = closest object containing "signed distance" and color
-  co = minWithColor(co, sdBox(p - vec3(0.,-.5, 0.), vec3(0.5, 0.01, 0.5), vec3(.5, .5, .5)));
+  co = minWithColor(co, sdBox(p - vec3(0.,-.5, 0.), vec3(0.5, 0.0, 0.5), vec3(.5, .5, .5)));
   return co;
 }
 
@@ -151,10 +151,10 @@ float GetLight(vec3 p) {
 	return dif;
 }
 
-bool IsOnPlane(vec3 p) {
-    float planeY = 0.5; // replace with the y-coordinate of your plane
-    float epsilon = 0.04; // tolerance for floating point errors
-    return abs(p.y + planeY) < epsilon;
+bool IsOnBox(vec3 p, vec3 b) {
+    float epsilon = 0.01; // tolerance for floating point errors
+    Surface s = sdBox(p, b, vec3(0.0)); // color doesn't matter for this calculation
+    return abs(s.sd) < epsilon;
 }
 
 	void main() {
@@ -177,12 +177,12 @@ bool IsOnPlane(vec3 p) {
 			// col.rgb = n;
 			float dif = GetLight(p);
             
-        // if (IsOnPlane(p)) {
-        //     alpha = 0.4 - dif; // alpha is 1.0 in shadow and 0.0 in light
-        // } else {
+        if (IsOnBox(p -vec3(0., -.5, 0.), vec3(0.5, 0.0, 0.5))) {
+            alpha = 0.4 - dif; // alpha is 1.0 in shadow and 0.0 in light
+        } else {
             col = dif * co.col * 1.2;
             alpha = 1.0;
-        // }
+        }
 		}
         gl_FragColor = vec4(col, alpha);
         // gl_FragColor = vec4(rd, 1.0);
