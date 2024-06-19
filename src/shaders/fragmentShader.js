@@ -27,7 +27,7 @@ const float HALF_PI = 0.5 * PI;
 const float TWO_PI = 2.0 * PI;
 const int LOOP = 16;
 
-#define MAX_STEPS 40
+#define MAX_STEPS 100
 #define MAX_DIST 40.
 #define SURF_DIST 1e-3
 #define samples 32
