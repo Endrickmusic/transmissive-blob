@@ -76,6 +76,21 @@ float GetDist(vec3 p) {
 	return d;
 }
 
+float SoftShadow( in vec3 ro, in vec3 rd, float mint, float maxt, float w )
+{
+    float res = 1.0;
+    float t = mint;
+    for( int i=0; i<256 && t<maxt; i++ )
+    {
+        float h = GetDist(ro + t*rd);
+        res = min( res, h/(w*t) );
+        t += clamp(h, 0.005, 0.50);
+        if( res<-1.0 || t>maxt ) break;
+    }
+    res = max(res,-1.0);
+    return 0.25*(1.0+res)*(1.0+res)*(2.0-res);
+}
+
 float Raymarch(vec3 ro, vec3 rd) {
 	float dO = 0.;
 	float dS;
@@ -115,12 +130,17 @@ vec3 GetNormal(in vec3 p) {
 			vec3 p = ro + rd * d;
 			vec3 n = GetNormal(p);
 
+      // lighting 
+      vec3 lightDir = normalize(vec3(0.0, 2.0, 0.0)); 
+      float dif = clamp(dot(n, lightDir), 0.0, 1.0) * SoftShadow(p, lightDir, 0.01, 3.0, 0.1); 
+      color += dif * 1.5;
+
 			vec3 ref = reflect(rd, n);
-        	vec3 refOutside = texture2D(iChannel0, ref).rgb;
+      vec3 refOutside = texture2D(iChannel0, ref).rgb;
 
 			float iorRatioRed = iorRatio + uDispersion;
-    		float iorRatioGreen = iorRatio;
-    		float iorRatioBlue = iorRatio - uDispersion;
+    	float iorRatioGreen = iorRatio;
+    	float iorRatioBlue = iorRatio - uDispersion;
 
 			for ( int i = 0; i < LOOP; i ++ ) {
 
@@ -137,11 +157,11 @@ vec3 GetNormal(in vec3 p) {
 		color /= float( LOOP );
 
 		// fresnel
-        float fresnel = pow(1. + dot(rd, n), uReflection);
+    float fresnel = pow(1. + dot(rd, n), uReflection);
 
-        color = mix(color, refOutside, fresnel); 
+    color = mix(color, refOutside, fresnel); 
         
-		color = pow(color, vec3(.515));
+		color = pow(color, vec3(.555));
 		gl_FragColor = vec4(color, 1.0);
 		}
 	}
