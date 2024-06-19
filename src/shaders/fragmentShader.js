@@ -146,9 +146,24 @@ float GetLight(vec3 p) {
 	vec3 l = normalize(lightPos - p);
 	vec3 n = GetNormal(p);
 	float dif = clamp(dot(n, l), 0., 1.);
-	float d = Raymarch(p + n * SURF_DIST * 2., l, 0., MAX_DIST).sd;
-	if (d < length(lightPos - p)) dif *= 0.1;	
+	// float d = Raymarch(p + n * SURF_DIST * 2., l, 0., MAX_DIST).sd;
+	// if (d < length(lightPos - p)) dif *= 0.1;	
 	return dif;
+}
+
+float SoftShadow( in vec3 ro, in vec3 rd, float mint, float maxt, float w )
+{
+    float res = 1.0;
+    float t = mint;
+    for( int i=0; i<256 && t<maxt; i++ )
+    {
+        float h = sdScene(ro + t * rd).sd;
+        res = min( res, h/(w*t) );
+        t += clamp(h, 0.005, 0.50);
+        if( res<-1.0 || t>maxt ) break;
+    }
+    res = max(res,-1.0);
+    return 0.25*(1.0+res)*(1.0+res)*(2.0-res);
 }
 
 bool IsOnBox(vec3 p, vec3 b) {
@@ -175,9 +190,10 @@ bool IsOnBox(vec3 p, vec3 b) {
 			vec3 p = ro + rd * co.sd;
 			vec3 n = GetNormal(p);
 			// col.rgb = n;
-			float dif = GetLight(p);
+			float dif = GetLight(p) * SoftShadow(p, vec3(0., 2.,0.), 0.01, 10., 0.1);
+			// float dif = GetLight(p);
             
-        if (IsOnBox(p -vec3(0., -.5, 0.), vec3(0.5, 0.0, 0.5))) {
+        if (IsOnBox(p - vec3(0., -.5, 0.), vec3(0.5, 0.0, 0.5))) {
             alpha = 0.4 - dif; // alpha is 1.0 in shadow and 0.0 in light
         } else {
             col = dif * co.col * 1.2;
