@@ -36,19 +36,25 @@ const int LOOP = 16;
 float hash(in float v) { return fract(sin(v)*43237.5324); }
 vec3 hash3(in float v) { return vec3(hash(v), hash(v*99.), hash(v*9999.)); }
 
-float sphere(in vec3 p, in float r) { 
+float sdSphere(in vec3 p, in float r) { 
     float d = length(p) - r; 
 
     // texture displacement
     // vec2 uv = vec2(atan(p.x, p.z) / TWO_PI, p.y / 5.);
-    vec2 uv = vec2(0.5 + atan(p.z, p.x) / (2.0 * PI), 0.5 - asin(p.y) / PI);
-    float noise = texture2D(uNoiseTexture, uv).r;
-    float displacement = sin(p.x * 15.0 + uTime * 1. + noise) * 0.05;
-    displacement *= smoothstep(.9, -.1, p.y); // reduce displacement at the poles
-    d += displacement;
+    // vec2 uv = vec2(0.5 + atan(p.z, p.x) / (2.0 * PI), 0.5 - asin(p.y) / PI);
+    // float noise = texture2D(uNoiseTexture, uv).r;
+    // float displacement = sin(p.x * 15.0 + uTime * 1. + noise) * 0.05;
+    // displacement *= smoothstep(.9, -.1, p.y); // reduce displacement at the poles
+    // d += displacement;
 
     return d;
     }
+
+float sdBox( vec3 p, vec3 b )
+{
+  vec3 q = abs(p) - b;
+  return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+}
 
 float opSmoothUnion( float d1, float d2, float k ) {
     float h = clamp( 0.5 + 0.5*(d2-d1)/k, 0.0, 1.0 );
@@ -64,8 +70,9 @@ float GetDist(vec3 p) {
 		float r = uSize * 0.1;
 		// float r = uSize * 0.1 * hash(fi);
 		vec3 offset = .5 * sin(hash3(fi)) * cos(uTime + float(i));
-		d = opSmoothUnion(d, sphere(p - offset, r), 0.3);
+		d = opSmoothUnion(d, sdSphere(p - offset, r), 0.3);
 	}
+  d = opSmoothUnion(d, sdBox(p - vec3(0., -.5, 0.), vec3(0.4, 0.01, 0.4)), 0.3);
 	return d;
 }
 
@@ -94,7 +101,7 @@ vec3 GetNormal(in vec3 p) {
 	void main() {
 
 		float iorRatio = uIOR;
-		vec2 uv = vUv - 0.5;
+		vec2 uv = vUv;
 		vec3 ro = vRayOrigin.xyz;
 		vec3 rd = normalize(vHitPos - ro); 
 
@@ -134,7 +141,7 @@ vec3 GetNormal(in vec3 p) {
 
         color = mix(color, refOutside, fresnel); 
         
-		color = pow(color, vec3(.465));
+		color = pow(color, vec3(.515));
 		gl_FragColor = vec4(color, 1.0);
 		}
 	}
