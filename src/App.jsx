@@ -7,7 +7,7 @@ import Shader from "./BlobShader.jsx"
 
 export default function App() {
   return (
-    <Canvas shadows camera={{ position: [0, 0, 4], fov: 40 }}>
+    <Canvas shadows camera={{ position: [0, 0, 6], fov: 40 }}>
       <Environment background path="./cubemap/potsdamer_platz/" />
       <color attach="background" args={["#eeeeee"]} />
       <Shader />

@@ -67,7 +67,7 @@ export default function Shader() {
     IOR: {
       value: 0.84,
       min: 0.01,
-      max: 2.0,
+      max: 3.0,
       step: 0.01,
     },
     count: {
@@ -89,9 +89,9 @@ export default function Shader() {
       step: 0.001,
     },
     refract: {
-      value: 0.15,
-      min: 0.0,
-      max: 2.0,
+      value: 0.0,
+      min: -1.0,
+      max: 1.0,
       step: 0.1,
     },
     chromaticAbberation: {

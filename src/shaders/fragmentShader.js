@@ -130,6 +130,13 @@ vec3 GetNormal(in vec3 p) {
 			vec3 p = ro + rd * d;
 			vec3 n = GetNormal(p);
 
+		// Convert the 3D position on the sphere to 2D UV coordinates
+        // float u = 0.5 + atan(n.z, n.x) / (2.0 * PI);
+        // float v = 0.5 - asin(n.y) / PI;
+        // vec2 sphereUV = vec2(u, v);
+
+		vec2 sphereUV = vec2(0.5 + atan(p.z, p.x) / (2.0 * PI), 0.5 - asin(p.y) / PI);
+
       // lighting 
       vec3 lightDir = normalize(vec3(0.0, 2.0, 0.0)); 
       float dif = clamp(dot(n, lightDir), 0.0, 1.0) * SoftShadow(p, lightDir, 0.01, 3.0, 0.1); 
@@ -150,9 +157,9 @@ vec3 GetNormal(in vec3 p) {
 				vec3 refractVecG = refract(rd, n, iorRatioGreen);
 				vec3 refractVecB = refract(rd, n, iorRatioBlue);
 		
-				color.r += texture2D(uTexture, uv + refractVecR.xy * (uRefractPower + slide * 1.0)).r;
-				color.g += texture2D(uTexture, uv + refractVecG.xy * (uRefractPower + slide * 2.0)).g;
-				color.b += texture2D(uTexture, uv + refractVecB.xy * (uRefractPower + slide * 3.0)).b;
+				color.r += texture2D(uTexture, sphereUV + refractVecR.xy * (uRefractPower + slide * 1.0)).r;
+				color.g += texture2D(uTexture, sphereUV + refractVecG.xy * (uRefractPower + slide * 2.0)).g;
+				color.b += texture2D(uTexture, sphereUV + refractVecB.xy * (uRefractPower + slide * 3.0)).b;
 			}
 		color /= float( LOOP );
 
@@ -162,6 +169,7 @@ vec3 GetNormal(in vec3 p) {
     color = mix(color, refOutside, fresnel); 
         
 		color = pow(color, vec3(.555));
+		// color = vec3(sphereUV, 0.0);
 		gl_FragColor = vec4(color, 1.0);
 		}
 	}

@@ -188,6 +188,7 @@ color /= float( LOOP );
         // color = vec3(refOutside);
     
         color = pow(color, vec3(.465));
+        color = vec3(uv, 0.0);
         gl_FragColor = vec4(color, 1.);
         // gl_FragColor = vec4(uv, 0.0, 1.);
     }
