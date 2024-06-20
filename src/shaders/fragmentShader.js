@@ -135,7 +135,9 @@ vec3 GetNormal(in vec3 p) {
         // float v = 0.5 - asin(n.y) / PI;
         // vec2 sphereUV = vec2(u, v);
 
-		vec2 sphereUV = vec2(0.5 + atan(p.z, p.x) / (2.0 * PI), 0.5 - asin(p.y) / PI);
+		vec3 direction = normalize(p);
+		vec2 sphereUV = vec2(0.5 + atan(direction.z, direction.x) / (2.0 * PI), 0.5 - asin(direction.y) / PI);
+		// vec2 sphereUV = vec2(0.5 + atan(p.z, p.x) / (2.0 * PI), 0.5 - asin(p.y) / PI);
 
       // lighting 
       vec3 lightDir = normalize(vec3(0.0, 2.0, 0.0)); 
