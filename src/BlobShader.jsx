@@ -102,6 +102,15 @@ export default function Shader() {
     },
   })
 
+  // const reflection = 1.5
+  // const speed = 0.5
+  // const IOR = 0.84
+  // const count = 3
+  // const size = 1.0
+  // const dispersion = 0.03
+  // const refract = 0.15
+  // const chromaticAbberation = 0.5
+
   useEffect(() => {
     const object = meshRef.current
 

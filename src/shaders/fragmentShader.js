@@ -53,24 +53,24 @@ float opSmoothUnion( float d1, float d2, float k ) {
 
 #define BALL_NUM 5
 
-// float GetDist(vec3 p) {
-
-// 	float d = length(p) - 1.; // sphere
-// 	d = length(vec2(length(p.xz) - .4, p.y)) - .1;
-// 	return d;
-// }
-
 float GetDist(vec3 p) {
-	float d = 1e5;
-	for(int i = 0; i < BALL_NUM; i++) {
-		float fi = float(i) + 0.01;
-		float r = uSize * 0.1;
-		// float r = uSize * 0.1 * hash(fi);
-		vec3 offset = .5 * sin(hash3(fi)) * cos(uTime + float(i));
-		d = opSmoothUnion(d, sphere(p - offset, r), 0.24);
-	}
+
+	float d = length(p) - 1.; // sphere
+	d = length(vec2(length(p.xz) - .4, p.y)) - .1;
 	return d;
 }
+
+// float GetDist(vec3 p) {
+// 	float d = 1e5;
+// 	for(int i = 0; i < BALL_NUM; i++) {
+// 		float fi = float(i) + 0.01;
+// 		float r = uSize * 0.1;
+// 		// float r = uSize * 0.1 * hash(fi);
+// 		vec3 offset = .5 * sin(hash3(fi)) * cos(uTime + float(i));
+// 		d = opSmoothUnion(d, sphere(p - offset, r), 0.24);
+// 	}
+// 	return d;
+// }
 
 float Raymarch(vec3 ro, vec3 rd) {
 	float dO = 0.;
