@@ -244,7 +244,7 @@ export default function Shader() {
         <meshNormalMaterial />
       </mesh>
 
-      <mesh ref={meshRef} scale={[2, 2, 2]} position={[0, 0, 0]}>
+      <mesh ref={meshRef} scale={[2, 2, 2]} position={[1, 0, 0]}>
         <boxGeometry args={[1, 1, 1]} />
         <shaderMaterial
           uniforms={uniforms}
