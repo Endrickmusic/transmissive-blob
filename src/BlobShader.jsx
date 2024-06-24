@@ -1,7 +1,7 @@
 import { useCubeTexture, useFBO, Image } from "@react-three/drei"
 import { useFrame, useThree } from "@react-three/fiber"
 import { useRef, useMemo, useEffect, useCallback } from "react"
-import { useControls } from "leva"
+// import { useControls } from "leva"
 
 import vertexShader from "./shaders/vertexShader.js"
 import fragmentShader from "./shaders/camFragmentShader.js"
@@ -25,32 +25,37 @@ export default function Shader() {
     { path: "./cubemap/potsdamer_platz/" }
   )
 
-  const { dispersionOffset, speed, divideFactor, count } = useControls({
-    dispersionOffset: {
-      value: 0.0095,
-      min: 0.001,
-      max: 0.04,
-      step: 0.001,
-    },
-    speed: {
-      value: 1.0,
-      min: 0.01,
-      max: 3.0,
-      step: 0.01,
-    },
-    divideFactor: {
-      value: 0.5,
-      min: 0.01,
-      max: 1.0,
-      step: 0.01,
-    },
-    count: {
-      value: 3,
-      min: 1,
-      max: 20,
-      step: 1,
-    },
-  })
+  const dispersionOffset = 0.0095
+  const speed = 1.0
+  const divideFactor = 0.5
+  const count = 3
+
+  // const { dispersionOffset, speed, divideFactor, count } = useControls({
+  //   dispersionOffset: {
+  //     value: 0.0095,
+  //     min: 0.001,
+  //     max: 0.04,
+  //     step: 0.001,
+  //   },
+  //   speed: {
+  //     value: 1.0,
+  //     min: 0.01,
+  //     max: 3.0,
+  //     step: 0.01,
+  //   },
+  //   divideFactor: {
+  //     value: 0.5,
+  //     min: 0.01,
+  //     max: 1.0,
+  //     step: 0.01,
+  //   },
+  //   count: {
+  //     value: 3,
+  //     min: 1,
+  //     max: 20,
+  //     step: 1,
+  //   },
+  // })
 
   useEffect(() => {
     window.addEventListener("mousemove", updateMousePosition, false)
