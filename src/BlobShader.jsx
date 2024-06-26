@@ -7,7 +7,7 @@ import {
 } from "@react-three/drei"
 import { useFrame, useThree } from "@react-three/fiber"
 import { useRef, useMemo, useEffect, useCallback, useState } from "react"
-import { useControls } from "leva"
+// import { useControls } from "leva"
 
 import vertexShader from "./shaders/vertexShader.js"
 import fragmentShader from "./shaders/fragmentShader.js"
@@ -42,65 +42,74 @@ export default function Shader() {
 
   const [worldToObjectMatrix, setWorldToObjectMatrix] = useState(new Matrix4())
 
-  const {
-    reflection,
-    speed,
-    IOR,
-    count,
-    size,
-    dispersion,
-    refract,
-    chromaticAbberation,
-  } = useControls({
-    reflection: {
-      value: 1.5,
-      min: 0.01,
-      max: 6.0,
-      step: 0.1,
-    },
-    speed: {
-      value: 0.5,
-      min: 0.01,
-      max: 3.0,
-      step: 0.01,
-    },
-    IOR: {
-      value: 0.84,
-      min: 0.01,
-      max: 3.0,
-      step: 0.01,
-    },
-    count: {
-      value: 3,
-      min: 1,
-      max: 20,
-      step: 1,
-    },
-    size: {
-      value: 1.0,
-      min: 0.1,
-      max: 2.5,
-      step: 0.01,
-    },
-    dispersion: {
-      value: 0.03,
-      min: 0.0,
-      max: 0.1,
-      step: 0.001,
-    },
-    refract: {
-      value: 0.0,
-      min: -1.0,
-      max: 1.0,
-      step: 0.1,
-    },
-    chromaticAbberation: {
-      value: 0.5,
-      min: 0.0,
-      max: 5.0,
-      step: 0.1,
-    },
-  })
+  const reflection = 1.5
+  const speed = 0.5
+  const IOR = 0.84
+  const count = 3
+  const size = 1.0
+  const dispersion = 0.03
+  const refract = 0.0
+  const chromaticAbberation = 0.5
+
+  // const {
+  //   reflection,
+  //   speed,
+  //   IOR,
+  //   count,
+  //   size,
+  //   dispersion,
+  //   refract,
+  //   chromaticAbberation,
+  // } = useControls({
+  //   reflection: {
+  //     value: 1.5,
+  //     min: 0.01,
+  //     max: 6.0,
+  //     step: 0.1,
+  //   },
+  //   speed: {
+  //     value: 0.5,
+  //     min: 0.01,
+  //     max: 3.0,
+  //     step: 0.01,
+  //   },
+  //   IOR: {
+  //     value: 0.84,
+  //     min: 0.01,
+  //     max: 3.0,
+  //     step: 0.01,
+  //   },
+  //   count: {
+  //     value: 3,
+  //     min: 1,
+  //     max: 20,
+  //     step: 1,
+  //   },
+  //   size: {
+  //     value: 1.0,
+  //     min: 0.1,
+  //     max: 2.5,
+  //     step: 0.01,
+  //   },
+  //   dispersion: {
+  //     value: 0.03,
+  //     min: 0.0,
+  //     max: 0.1,
+  //     step: 0.001,
+  //   },
+  //   refract: {
+  //     value: 0.0,
+  //     min: -1.0,
+  //     max: 1.0,
+  //     step: 0.1,
+  //   },
+  //   chromaticAbberation: {
+  //     value: 0.5,
+  //     min: 0.0,
+  //     max: 5.0,
+  //     step: 0.1,
+  //   },
+  // })
 
   useEffect(() => {
     const object = meshRef.current
