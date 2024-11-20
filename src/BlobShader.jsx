@@ -17,7 +17,6 @@ export default function Shader() {
   const meshRef = useRef()
   const buffer = useFBO()
   const viewport = useThree((state) => state.viewport)
-  const scene = useThree((state) => state.scene)
   const camera = useThree((state) => state.camera)
 
   const nearPlaneWidth =
@@ -30,10 +29,22 @@ export default function Shader() {
   const mousePosition = useRef({ x: 0, y: 0 })
 
   const updateMousePosition = useCallback((e) => {
-    mousePosition.current = { x: e.pageX, y: e.pageY }
+    mousePosition.current = {
+      x: (e.clientX / window.innerWidth) * 2 - 1,
+      y: -(e.clientY / window.innerHeight) * 2 + 1,
+    }
   }, [])
 
-  const noiseTexture = useTexture("./textures/noise.png")
+  const noiseTexture = useTexture(
+    "./textures/noise.png",
+    (texture) => {
+      texture.needsUpdate = true
+    },
+    undefined,
+    (error) => {
+      console.error("Error loading noise texture:", error)
+    }
+  )
 
   const cubeTexture = useCubeTexture(
     ["px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png"],
@@ -104,21 +115,20 @@ export default function Shader() {
 
   useEffect(() => {
     const object = meshRef.current
-
     if (object) {
-      object.updateMatrixWorld()
-      const worldMatrix = object.matrixWorld
-      const inverseMatrix = new Matrix4().copy(worldMatrix).invert()
-      setWorldToObjectMatrix(inverseMatrix)
-      console.log("World to Object Matrix:", inverseMatrix)
-      meshRef.current.material.uniforms.uInverseModelMat.value = inverseMatrix
-      meshRef.current.updateMatrixWorld()
+      const updateMatrix = () => {
+        object.updateMatrixWorld()
+        const inverseMatrix = new Matrix4().copy(object.matrixWorld).invert()
+        setWorldToObjectMatrix(inverseMatrix)
+        object.material.uniforms.uInverseModelMat.value = inverseMatrix
+      }
+
+      updateMatrix()
+      return () => {
+        object.material.uniforms.uInverseModelMat.value = new Matrix4()
+      }
     }
-  }, [
-    meshRef.current?.position,
-    meshRef.current?.rotation,
-    meshRef.current?.scale,
-  ])
+  }, [])
 
   useEffect(() => {
     window.addEventListener("mousemove", updateMousePosition, false)
@@ -131,38 +141,49 @@ export default function Shader() {
   let cameraForwardPos = new Vector3(0, 0, -1)
 
   useFrame((state) => {
+    const mesh = meshRef.current
+    if (!mesh) return
+
     let time = state.clock.getElapsedTime()
 
-    if (meshRef.current) {
-    }
-
-    // Update the uniform
-
-    meshRef.current.material.uniforms.uCamPos.value = camera.position
-    // meshRef.current.material.uniforms.uMouse.value = new Vector2(0, 0)
-
-    meshRef.current.material.uniforms.uMouse.value = new Vector2(
+    mesh.material.uniforms.uCamPos.value = camera.position
+    mesh.material.uniforms.uMouse.value = new Vector2(
       mousePosition.current.x,
       mousePosition.current.y
     )
 
-    meshRef.current.material.uniforms.uTime.value = time * speed
-    meshRef.current.material.uniforms.uReflection.value = reflection
-    meshRef.current.material.uniforms.uSpeed.value = speed
-    meshRef.current.material.uniforms.uIOR.value = IOR
-    meshRef.current.material.uniforms.uCount.value = count
-    meshRef.current.material.uniforms.uSize.value = size
-    meshRef.current.material.uniforms.uDispersion.value = dispersion
-    meshRef.current.material.uniforms.uRefractPower.value = refract
-    meshRef.current.material.uniforms.uChromaticAbberation.value =
-      chromaticAbberation
-
-    // FBO
-    // state.gl.setRenderTarget(buffer)
-    // state.gl.setClearColor("#d8d7d7")
-    // state.gl.render(scene, state.camera)
-    // state.gl.setRenderTarget(null)
+    mesh.material.uniforms.uTime.value = time * speed
+    mesh.material.uniforms.uReflection.value = reflection
+    mesh.material.uniforms.uSpeed.value = speed
+    mesh.material.uniforms.uIOR.value = IOR
+    mesh.material.uniforms.uCount.value = count
+    mesh.material.uniforms.uSize.value = size
+    mesh.material.uniforms.uDispersion.value = dispersion
+    mesh.material.uniforms.uRefractPower.value = refract
+    mesh.material.uniforms.uChromaticAbberation.value = chromaticAbberation
   })
+
+  // Create a ref for resolution to avoid recreating Vector2 on every frame
+  const resolutionRef = useRef(new Vector2())
+
+  // Handle resolution updates
+  useEffect(() => {
+    const updateResolution = () => {
+      if (meshRef.current?.material) {
+        resolutionRef.current
+          .set(viewport.width, viewport.height)
+          .multiplyScalar(Math.min(window.devicePixelRatio, 2))
+
+        meshRef.current.material.uniforms.uResolution.value =
+          resolutionRef.current
+      }
+    }
+
+    window.addEventListener("resize", updateResolution)
+    updateResolution() // Initial set
+
+    return () => window.removeEventListener("resize", updateResolution)
+  }, [viewport.width, viewport.height])
 
   // Define the shader uniforms with memoization to optimize performance
   const uniforms = useMemo(
@@ -183,9 +204,7 @@ export default function Shader() {
       },
       uResolution: {
         type: "v2",
-        value: new Vector2(viewport.width, viewport.height).multiplyScalar(
-          Math.min(window.devicePixelRatio, 2)
-        ),
+        value: resolutionRef.current,
       },
       uTexture: {
         type: "sampler2D",
@@ -232,7 +251,19 @@ export default function Shader() {
         value: chromaticAbberation,
       },
     }),
-    [viewport.width, viewport.height, buffer.texture]
+    [
+      buffer.texture,
+      noiseTexture,
+      cubeTexture,
+      speed,
+      IOR,
+      count,
+      reflection,
+      size,
+      dispersion,
+      refract,
+      chromaticAbberation,
+    ]
   )
 
   return (
