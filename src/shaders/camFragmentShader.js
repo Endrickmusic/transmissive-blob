@@ -48,7 +48,7 @@ float sphere(in vec3 p, in float r) {
     float displacement = sin(p.x * 3.0 + uTime * 1. + noise) * 0.001
     ;
     displacement *= smoothstep(0.8, -0.8, p.y); // reduce displacement at the poles
-    d += displacement;
+    // d += displacement;
 
     return d;
     }
