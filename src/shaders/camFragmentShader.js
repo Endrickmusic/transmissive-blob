@@ -28,12 +28,13 @@ float opSmoothUnion( float d1, float d2, float k ) {
 }
 
 #define BALL_NUM 10
+
 float map(in vec3 p) {
   float res = 1e5;
   for(int i=0; i<BALL_NUM; i++) {
     float fi = float(i)+1.;
-    float r = 0.+1.5*hash(fi);
-    vec3 offset = 2.*sin(hash3(fi)*uTime);
+    float r = 0. + 1.5 * hash(fi);
+    vec3 offset = 2. * sin (hash3(fi) * uTime * 0.2);
     res = opSmoothUnion(res, sphere(p-offset, r), 0.75);
   }
   return res;
