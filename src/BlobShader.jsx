@@ -19,13 +19,7 @@ export default function Shader() {
   const viewport = useThree((state) => state.viewport)
   const camera = useThree((state) => state.camera)
 
-  const nearPlaneWidth =
-    camera.near *
-    Math.tan(MathUtils.degToRad(camera.fov / 2)) *
-    camera.aspect *
-    2
-  const nearPlaneHeight = nearPlaneWidth / camera.aspect
-
+  // mouse position
   const mousePosition = useRef({ x: 0, y: 0 })
 
   const updateMousePosition = useCallback((e) => {
@@ -35,6 +29,7 @@ export default function Shader() {
     }
   }, [])
 
+  // textures
   const noiseTexture = useTexture(
     "./textures/noise.png",
     (texture) => {
@@ -113,6 +108,7 @@ export default function Shader() {
     },
   })
 
+  // world to object matrix
   useEffect(() => {
     const object = meshRef.current
     if (object) {
@@ -130,6 +126,7 @@ export default function Shader() {
     }
   }, [])
 
+  // mouse position
   useEffect(() => {
     window.addEventListener("mousemove", updateMousePosition, false)
     console.log("mousePosition", mousePosition)
@@ -138,8 +135,7 @@ export default function Shader() {
     }
   }, [updateMousePosition])
 
-  let cameraForwardPos = new Vector3(0, 0, -1)
-
+  // render loop
   useFrame((state) => {
     const mesh = meshRef.current
     if (!mesh) return
@@ -249,6 +245,10 @@ export default function Shader() {
       uChromaticAbberation: {
         type: "f",
         value: chromaticAbberation,
+      },
+      uLightPos: {
+        type: "v3",
+        value: new Vector3(0, 10, 0),
       },
     }),
     [

@@ -8,6 +8,7 @@ uniform float dispersionOffset;
 uniform float divideFactor;
 uniform int count;
 uniform float uSize;
+uniform vec3 uLightPos;
 
 varying vec2 vUv;
 varying vec4 vPosition;
@@ -94,6 +95,22 @@ vec3 GetNormal(in vec3 p) {
     );
 }
 
+float SoftShadow(vec3 ro, vec3 rd, float mint, float maxt, float k) {
+    float res = 1.0;
+    float ph = 1e20;
+    float t = mint;
+    for(int i = 0; i < 32; i++) {
+        float h = GetDist(ro + rd * t);
+        float y = h * h / (2.0 * ph);
+        float d = sqrt(h * h - y * y);
+        res = min(res, k * d / max(0.0, t - y));
+        ph = h;
+        t += h;
+        if(t > maxt) break;
+    }
+    return clamp(res, 0.0, 1.0);
+}
+
 	void main() {
 
 		vec2 uv = vUv - 0.5;
@@ -104,15 +121,32 @@ vec3 GetNormal(in vec3 p) {
 
 		vec3 col = vec3(0.0);
 
-		if ( d >= MAX_DIST )
-			discard;
-		else {
+		// Virtual plane height (adjust as needed)
+		float planeY = -1.0;
+
+		if(d >= MAX_DIST) {
+			// Check if ray intersects shadow plane
+			if(rd.y < 0.0) {
+				float t = -(ro.y - planeY) / rd.y;
+				vec3 pos = ro + rd * t;
+				
+				// Calculate shadow
+				vec3 lightDir = normalize(uLightPos - pos);
+				float shadow = SoftShadow(pos, lightDir, 0.1, 10.0, 32.0);
+				
+				// Only show shadow and make non-shadow areas transparent
+				float shadowStrength = 1.0 - shadow;
+				col = vec3(0.0);
+				gl_FragColor = vec4(col, shadowStrength * 0.95);
+			} else {
+				discard;
+			}
+		} else {
 			vec3 p = ro + rd * d;
 			vec3 n = GetNormal(p);
 			col.rgb = n;
+			gl_FragColor = vec4(col, 1.0);
 		}
-        gl_FragColor = vec4(col, 1.0);
-        // gl_FragColor = vec4(rd, 1.0);
 	}
 
 
