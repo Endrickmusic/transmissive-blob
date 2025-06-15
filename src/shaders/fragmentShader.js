@@ -69,6 +69,7 @@ float GetDist(vec3 p) {
 		// float r = uSize * 0.1 * hash(fi);
 		vec3 offset = .5 * sin(hash3(fi)) * cos(uTime + float(i));
 		d = opSmoothUnion(d, sphere(p - offset, r), 0.24);
+		// d = opSmoothUnion(d, sphere(p, r), 0.24);
 	}
 	return d;
 }
