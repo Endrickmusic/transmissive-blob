@@ -10,6 +10,9 @@ uniform int count;
 uniform float uSize;
 uniform vec3 uLightPos;
 uniform float iorRatio;
+uniform float uReflection;
+uniform float uDispersion;
+uniform sampler2D uTexture;
 uniform samplerCube iChannel0;
 
 varying vec2 vUv;
@@ -155,6 +158,43 @@ float SoftShadow(vec3 ro, vec3 rd, float mint, float maxt, float k) {
 			// refraction
 			vec3 refractVec = refract(rd, n, iorRatio);
 			col.rgb = refOutside;
+
+    float iorRatioRed = iorRatio + uDispersion;
+    float iorRatioGreen = iorRatio;
+    float iorRatioBlue = iorRatio - uDispersion;
+
+for ( int i = 0; i < LOOP; i ++ ) {
+  float slide = float(i) / float(LOOP) * 0.1;
+
+    vec3 refractVecR = refract(rd, n, iorRatioRed);
+	 col.r += textureCube(iChannel0, refractVecR.xyz * (slide * 1.0)).r;
+
+    vec3 refractVecG = refract(rd, n, iorRatioGreen);
+	col.g += textureCube(iChannel0, refractVecG.xyz * (slide * 2.0)).g;	
+    vec3 refractVecB = refract(rd, n, iorRatioBlue);
+	col.b += textureCube(iChannel0, refractVecB.xyz * (slide * 3.0)).b;
+
+}
+
+// Divide by the number of layers to normalize colors (rgb values can be worth up to the value of LOOP)
+col /= float( LOOP );
+
+//...
+
+
+        // vec2 texCoord = ref.xy * 0.5 + 0.5;
+        // color = texture2D(texture01, texCoord).rgb;
+        // color = texture2D(uTexture, uv + refractVec.xy).rgb;
+
+        // fresnel
+        float fresnel = pow(1. + dot(rd, n), uReflection);
+
+        col = mix(col, refOutside, fresnel); 
+        
+        // color = vec3(fresnel);
+        // color = vec3(refOutside);
+    
+        col = pow(col, vec3(.465));
 
 			// col.rgb = n;
 			gl_FragColor = vec4(col, 1.0);

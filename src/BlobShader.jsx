@@ -65,7 +65,7 @@ export default function Shader() {
       step: 0.1,
     },
     speed: {
-      value: 0.5,
+      value: 0.1,
       min: 0.01,
       max: 3.0,
       step: 0.01,
@@ -83,7 +83,7 @@ export default function Shader() {
       step: 1,
     },
     size: {
-      value: 0.2,
+      value: 1.0,
       min: 0.1,
       max: 2.5,
       step: 0.01,
