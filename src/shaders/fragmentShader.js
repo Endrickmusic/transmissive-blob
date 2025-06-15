@@ -9,6 +9,8 @@ uniform float divideFactor;
 uniform int count;
 uniform float uSize;
 uniform vec3 uLightPos;
+uniform float iorRatio;
+uniform samplerCube iChannel0;
 
 varying vec2 vUv;
 varying vec4 vPosition;
@@ -145,7 +147,16 @@ float SoftShadow(vec3 ro, vec3 rd, float mint, float maxt, float k) {
 		} else {
 			vec3 p = ro + rd * d;
 			vec3 n = GetNormal(p);
-			col.rgb = n;
+
+			// reflection
+        	vec3 ref = reflect(rd, n);
+       		vec3 refOutside = texture2D(iChannel0, ref).rgb;
+
+			// refraction
+			vec3 refractVec = refract(rd, n, iorRatio);
+			col.rgb = refOutside;
+
+			// col.rgb = n;
 			gl_FragColor = vec4(col, 1.0);
 		}
 	}

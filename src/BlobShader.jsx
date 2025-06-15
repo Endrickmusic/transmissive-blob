@@ -83,7 +83,7 @@ export default function Shader() {
       step: 1,
     },
     size: {
-      value: 0.01,
+      value: 0.2,
       min: 0.1,
       max: 2.5,
       step: 0.01,

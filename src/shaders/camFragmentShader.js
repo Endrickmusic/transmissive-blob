@@ -61,14 +61,16 @@ float opSmoothUnion( float d1, float d2, float k ) {
 #define BALL_NUM 3
 
 float map(in vec3 p) {
-  float res = 1e5;
-  for(int i=0; i<BALL_NUM; i++) {
-    float fi = float(i) + 0.01;
-    float r = uSize * 0.08 * hash(fi);
-    vec3 offset = 0.1 * sin(hash3(fi) * uTime);
-    res = opSmoothUnion(res, sphere(p - offset, r), 0.75);
-  }
-  return res;
+	float d = 1e5;
+	for(int i = 0; i < BALL_NUM; i++) {
+		float fi = float(i) + 0.01;
+		float r = uSize * 0.1;
+		// float r = uSize * 0.1 * hash(fi);
+		vec3 offset = .5 * sin(hash3(fi)) * cos(uTime + float(i));
+		d = opSmoothUnion(d, sphere(p - offset, r), 0.24);
+		// d = opSmoothUnion(d, sphere(p, r), 0.24);
+	}
+	return d;
 }
 
 vec3 normal(in vec3 p) {
