@@ -77,13 +77,13 @@ export default function Shader() {
       step: 0.01,
     },
     count: {
-      value: 3,
+      value: 1,
       min: 1,
       max: 20,
       step: 1,
     },
     size: {
-      value: 1.0,
+      value: 0.01,
       min: 0.1,
       max: 2.5,
       step: 0.01,
@@ -251,19 +251,7 @@ export default function Shader() {
         value: new Vector3(0, 10, 0),
       },
     }),
-    [
-      buffer.texture,
-      noiseTexture,
-      cubeTexture,
-      speed,
-      IOR,
-      count,
-      reflection,
-      size,
-      dispersion,
-      refract,
-      chromaticAbberation,
-    ]
+    []
   )
 
   return (
