@@ -9,7 +9,7 @@ uniform float divideFactor;
 uniform int count;
 uniform float uSize;
 uniform vec3 uLightPos;
-uniform float iorRatio;
+uniform float uIOR;
 uniform float uReflection;
 uniform float uDispersion;
 uniform sampler2D uTexture;
@@ -28,6 +28,7 @@ const int LOOP = 16;
 #define MAX_STEPS 40
 #define MAX_DIST 40.
 #define SURF_DIST 1e-3
+#define LOOP 4
 #define samples 32
 #define LOD 
 
@@ -59,32 +60,36 @@ float opSmoothUnion( float d1, float d2, float k ) {
 
 #define BALL_NUM 5
 
-// float GetDist(vec3 p) {
-
-// 	float d = length(p) - 1.; // sphere
-// 	d = length(vec2(length(p.xz) - .4, p.y)) - .1;
-// 	return d;
-// }
+float cubeSDF(vec3 p, vec3 size) {
+    vec3 q = abs(p) - size;
+    return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0);
+}
 
 float GetDist(vec3 p) {
-	float d = 1e5;
-	for(int i = 0; i < BALL_NUM; i++) {
-		float fi = float(i) + 0.01;
-		float r = uSize * 0.1;
-		// float r = uSize * 0.1 * hash(fi);
-		vec3 offset = .5 * sin(hash3(fi)) * cos(uTime + float(i));
-		d = opSmoothUnion(d, sphere(p - offset, r), 0.24);
-		// d = opSmoothUnion(d, sphere(p, r), 0.24);
-	}
+	float d = cubeSDF(p, vec3(0.2));
 	return d;
 }
 
-float Raymarch(vec3 ro, vec3 rd) {
+
+// float GetDist(vec3 p) {
+// 	float d = 1e5;
+// 	for(int i = 0; i < BALL_NUM; i++) {
+// 		float fi = float(i) + 0.01;
+// 		float r = uSize * 0.1;
+// 		// float r = uSize * 0.1 * hash(fi);
+// 		vec3 offset = .5 * sin(hash3(fi)) * cos(uTime + float(i));
+// 		d = opSmoothUnion(d, sphere(p - offset, r), 0.24);
+// 		// d = opSmoothUnion(d, sphere(p, r), 0.24);
+// 	}
+// 	return d;
+// }
+
+float Raymarch(vec3 ro, vec3 rd, float side) {
 	float dO = 0.;
 	float dS;
 	for (int i = 0; i < MAX_STEPS; i++) {
 		vec3 p = ro + rd * dO;
-		dS = GetDist(p);
+		dS = GetDist(p) * side;
 		dO += dS;
 		if (dS < SURF_DIST || dO > MAX_DIST) break;
 	}
@@ -94,10 +99,10 @@ float Raymarch(vec3 ro, vec3 rd) {
 vec3 GetNormal(in vec3 p) {
 	vec2 e = vec2(1., -1.) * 1e-3;
     return normalize(
-    	e.xyy * GetDist(p+e.xyy)+
-    	e.yxy * GetDist(p+e.yxy)+
-    	e.yyx * GetDist(p+e.yyx)+
-    	e.xxx * GetDist(p+e.xxx)
+    	e.xyy * GetDist(p + e.xyy) +
+    	e.yxy * GetDist(p + e.yxy) +
+    	e.yyx * GetDist(p + e.yyx) +
+    	e.xxx * GetDist(p + e.xxx)
     );
 }
 
@@ -117,87 +122,90 @@ float SoftShadow(vec3 ro, vec3 rd, float mint, float maxt, float k) {
     return clamp(res, 0.0, 1.0);
 }
 
-	void main() {
+void main() {
+vec2 uv = vUv - 0.5;
+vec3 ro = vRayOrigin.xyz; //vec3(0., 0., -3.);
+vec3 rd = normalize(vHitPos - ro); //normalize(vec3(uv, 1.));
 
-		vec2 uv = vUv - 0.5;
-		vec3 ro = vRayOrigin.xyz; //vec3(0., 0., -3.);
-		vec3 rd = normalize(vHitPos - ro); //normalize(vec3(uv, 1.));
+float d = Raymarch(ro, rd, 1.0);
 
-		float d = Raymarch(ro, rd);
+vec3 col = vec3(0.0);
 
-		vec3 col = vec3(0.0);
+// Virtual plane height (adjust as needed)
+float planeY = -1.0;
 
-		// Virtual plane height (adjust as needed)
-		float planeY = -1.0;
+if(d >= MAX_DIST) {
+	// Check if ray intersects shadow plane
+	if(rd.y < 0.0) {
+		float t = -(ro.y - planeY) / rd.y;
+		vec3 pos = ro + rd * t;
+		
+		// Calculate shadow
+		vec3 lightDir = normalize(uLightPos - pos);
+		float shadow = SoftShadow(pos, lightDir, 0.1, 10.0, 32.0);
+		
+		// Only show shadow and make non-shadow areas transparent
+		float shadowStrength = 1.0 - shadow;
+		col = vec3(0.0);
+		gl_FragColor = vec4(col, shadowStrength * 0.95);
+	} else {
+		discard;
+	}
+	} else {
 
-		if(d >= MAX_DIST) {
-			// Check if ray intersects shadow plane
-			if(rd.y < 0.0) {
-				float t = -(ro.y - planeY) / rd.y;
-				vec3 pos = ro + rd * t;
-				
-				// Calculate shadow
-				vec3 lightDir = normalize(uLightPos - pos);
-				float shadow = SoftShadow(pos, lightDir, 0.1, 10.0, 32.0);
-				
-				// Only show shadow and make non-shadow areas transparent
-				float shadowStrength = 1.0 - shadow;
-				col = vec3(0.0);
-				gl_FragColor = vec4(col, shadowStrength * 0.95);
-			} else {
-				discard;
-			}
-		} else {
-			vec3 p = ro + rd * d;
-			vec3 n = GetNormal(p);
+		vec3 p = ro + rd * d;
+		vec3 n = GetNormal(p);
 
-			// reflection
-        	vec3 ref = reflect(rd, n);
-       		vec3 refOutside = texture2D(iChannel0, ref).rgb;
+		// reflection
+		vec3 refl = reflect(rd, n);
+		vec3 reflOutside = texture2D(iChannel0, refl).rgb;
 
-			// refraction
-			vec3 refractVec = refract(rd, n, iorRatio);
-			col.rgb = refOutside;
+		// refraction
+		vec3 refractIn = refract(rd, n, 1. / uIOR);
 
-    float iorRatioRed = iorRatio + uDispersion;
-    float iorRatioGreen = iorRatio;
-    float iorRatioBlue = iorRatio - uDispersion;
+		// refract out
+		float iorRatioRed = uIOR + uDispersion;
+		float iorRatioGreen = uIOR;
+		float iorRatioBlue = uIOR - uDispersion;
 
-for ( int i = 0; i < LOOP; i ++ ) {
-  float slide = float(i) / float(LOOP) * 0.1;
+		vec3 pEnter = p - n * SURF_DIST * 3.0;
 
-    vec3 refractVecR = refract(rd, n, iorRatioRed);
-	 col.r += textureCube(iChannel0, refractVecR.xyz * (slide * 1.0)).r;
+		float dIn = Raymarch(pEnter, refractIn, -1.0);
 
-    vec3 refractVecG = refract(rd, n, iorRatioGreen);
-	col.g += textureCube(iChannel0, refractVecG.xyz * (slide * 2.0)).g;	
-    vec3 refractVecB = refract(rd, n, iorRatioBlue);
-	col.b += textureCube(iChannel0, refractVecB.xyz * (slide * 3.0)).b;
+		vec3 pExit = pEnter + refractIn * dIn;
 
-}
+		vec3 nExit = - GetNormal(pExit);
+
+	for ( int i = 0; i < LOOP; i ++ ) {
+    	float slide = float(i) / float(LOOP) * 0.1;
+
+    	vec3 refractVecR = refract(refractIn, nExit, iorRatioRed);
+		if(dot(refractVecR, refractVecR) == 0.0) refractVecR = reflect(refractIn, nExit);
+		col.r += textureCube(iChannel0, refractVecR * (slide * 1.0)).r;
+
+    	vec3 refractVecG = refract(refractIn, nExit, iorRatioGreen);
+		if(dot(refractVecG, refractVecG) == 0.0) refractVecG = reflect(refractIn, nExit);
+		col.g += textureCube(iChannel0, refractVecG * (slide * 2.0)).g;	
+
+    	vec3 refractVecB = refract(refractIn, nExit, iorRatioBlue);
+		if(dot(refractVecB, refractVecB) == 0.0) refractVecB = reflect(refractIn, nExit);
+		col.b += textureCube(iChannel0, refractVecB * (slide * 3.0)).b;
+	}
 
 // Divide by the number of layers to normalize colors (rgb values can be worth up to the value of LOOP)
-col /= float( LOOP );
-
-//...
-
-
-        // vec2 texCoord = ref.xy * 0.5 + 0.5;
-        // color = texture2D(texture01, texCoord).rgb;
-        // color = texture2D(uTexture, uv + refractVec.xy).rgb;
+		col /= float( LOOP );
 
         // fresnel
         float fresnel = pow(1. + dot(rd, n), uReflection);
 
-        col = mix(col, refOutside, fresnel); 
+        col = mix(col, reflOutside, fresnel); 
         
         // color = vec3(fresnel);
         // color = vec3(refOutside);
     
         col = pow(col, vec3(.465));
 
-			// col.rgb = n;
-			gl_FragColor = vec4(col, 1.0);
+		gl_FragColor = vec4(col, 1.0);
 		}
 	}
 
