@@ -44,7 +44,7 @@ float sphere(in vec3 p, in float r) {
     float noise = texture2D(uNoiseTexture, uv).r;
     float displacement = sin(p.x * 3.0 + uTime * 5. + noise) * 0.3;
     displacement *= smoothstep(0.8, -0.8, p.y); // reduce displacement at the poles
-    d += displacement;
+    // d += displacement;
 
     return d;
     }
@@ -110,7 +110,7 @@ void main()
     if(tmm.y < t) {
         
         // background
-        gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0);
+        discard;
 
     } else {
         
@@ -143,9 +143,9 @@ for ( int i = 0; i < LOOP; i ++ ) {
     // color.g += texture2D(uTexture, uv + refractVecG.xy * (uRefractPower + slide * 2.0) * uChromaticAberration).g;
     // color.b += texture2D(uTexture, uv + refractVecB.xy * (uRefractPower + slide * 3.0) * uChromaticAberration).b;
 
-    color.r += texture2D(uTexture, uv + refractVecR.xy * (uRefractPower + slide * 1.0)).r;
-    color.g += texture2D(uTexture, uv + refractVecG.xy * (uRefractPower + slide * 2.0)).g;
-    color.b += texture2D(uTexture, uv + refractVecB.xy * (uRefractPower + slide * 3.0)).b;
+    color.r += texture2D(uTexture, refractVecR.xy * (uRefractPower + slide * 1.0)).r;
+    color.g += texture2D(uTexture, refractVecG.xy * (uRefractPower + slide * 2.0)).g;
+    color.b += texture2D(uTexture, refractVecB.xy * (uRefractPower + slide * 3.0)).b;
 
 }
 
