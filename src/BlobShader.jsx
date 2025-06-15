@@ -71,7 +71,7 @@ export default function Shader() {
       step: 0.01,
     },
     IOR: {
-      value: 0.84,
+      value: 1.45,
       min: 0.01,
       max: 2.0,
       step: 0.01,
@@ -89,7 +89,7 @@ export default function Shader() {
       step: 0.01,
     },
     dispersion: {
-      value: 0.03,
+      value: 0.018,
       min: 0.0,
       max: 0.1,
       step: 0.001,

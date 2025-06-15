@@ -25,10 +25,10 @@ const float HALF_PI = 0.5 * PI;
 const float TWO_PI = 2.0 * PI;
 const int LOOP = 16;
 
-#define MAX_STEPS 40
-#define MAX_DIST 40.
-#define SURF_DIST 1e-3
-#define LOOP 4
+#define MAX_STEPS 128
+#define MAX_DIST 100.0
+#define SURF_DIST 1e-4
+#define LOOP 8
 #define samples 32
 #define LOD 
 
@@ -60,29 +60,29 @@ float opSmoothUnion( float d1, float d2, float k ) {
 
 #define BALL_NUM 5
 
-float cubeSDF(vec3 p, vec3 size) {
-    vec3 q = abs(p) - size;
-    return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0);
-}
-
-float GetDist(vec3 p) {
-	float d = cubeSDF(p, vec3(0.2));
-	return d;
-}
-
+// float cubeSDF(vec3 p, vec3 size) {
+//     vec3 q = abs(p) - size;
+//     return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0);
+// }
 
 // float GetDist(vec3 p) {
-// 	float d = 1e5;
-// 	for(int i = 0; i < BALL_NUM; i++) {
-// 		float fi = float(i) + 0.01;
-// 		float r = uSize * 0.1;
-// 		// float r = uSize * 0.1 * hash(fi);
-// 		vec3 offset = .5 * sin(hash3(fi)) * cos(uTime + float(i));
-// 		d = opSmoothUnion(d, sphere(p - offset, r), 0.24);
-// 		// d = opSmoothUnion(d, sphere(p, r), 0.24);
-// 	}
+// 	float d = cubeSDF(p, vec3(0.2));
 // 	return d;
 // }
+
+
+float GetDist(vec3 p) {
+	float d = 1e5;
+	for(int i = 0; i < BALL_NUM; i++) {
+		float fi = float(i) + 0.01;
+		float r = uSize * 0.1;
+		// float r = uSize * 0.1 * hash(fi);
+		vec3 offset = .5 * sin(hash3(fi)) * cos(uTime + float(i));
+		d = opSmoothUnion(d, sphere(p - offset, r), 0.24);
+		// d = opSmoothUnion(d, sphere(p, r), 0.24);
+	}
+	return d;
+}
 
 float Raymarch(vec3 ro, vec3 rd, float side) {
 	float dO = 0.;
