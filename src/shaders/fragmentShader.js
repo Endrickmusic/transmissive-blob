@@ -13,7 +13,13 @@ uniform float uIOR;
 uniform float uReflection;
 uniform float uDispersion;
 uniform sampler2D uTexture;
+uniform sampler2D uNoiseTexture;
 uniform samplerCube iChannel0;
+uniform float uMetallic;
+uniform float uRoughness;
+uniform vec3 uAlbedo;
+uniform vec3 uLightPosition;
+uniform vec3 uLightColor;
 
 varying vec2 vUv;
 varying vec4 vPosition;
@@ -43,12 +49,12 @@ float sphere(in vec3 p, in float r) {
 
     // texture displacement
     // vec2 uv = vec2(atan(p.x, p.z) / TWO_PI, p.y / 5.);
-    // vec2 uv = vec2(0.5 + atan(p.z, p.x) / (2.0 * PI), 0.5 - asin(p.y) / PI);
-    // float noise = texture2D(uNoiseTexture, uv).r;
-    // float displacement = sin(p.x * 3.0 + uTime * 1. + noise) * 0.001
-    // ;
-    // displacement *= smoothstep(0.8, -0.8, p.y); // reduce displacement at the poles
-    // d += displacement;
+    vec2 uv = vec2(0.5 + atan(p.z, p.x) / (2.0 * PI), 0.5 - asin(p.y) / PI);
+    float noise = texture2D(uNoiseTexture, uv).r;
+    float displacement = sin(p.x * 3.0 + uTime * 1. + noise) * 0.001
+    ;
+    displacement *= smoothstep(0.8, -0.8, p.y); // reduce displacement at the poles
+    d += displacement;
 
     return d;
     }
@@ -122,6 +128,75 @@ float SoftShadow(vec3 ro, vec3 rd, float mint, float maxt, float k) {
     return clamp(res, 0.0, 1.0);
 }
 
+float DistributionGGX(vec3 N, vec3 H, float roughness) {
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float NdotH = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH * NdotH;
+
+    float nom   = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = PI * denom * denom;
+
+    return nom / denom;
+}
+
+float GeometrySchlickGGX(float NdotV, float roughness) {
+    float r = (roughness + 1.0);
+    float k = (r * r) / 8.0;
+
+    float nom   = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+
+    return nom / denom;
+}
+
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2 = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1 = GeometrySchlickGGX(NdotL, roughness);
+
+    return ggx1 * ggx2;
+}
+
+vec3 fresnelSchlick(float cosTheta, vec3 F0) {
+    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+vec3 calculatePBR(vec3 worldPos, vec3 N) {
+    vec3 V = normalize(vRayOrigin.xyz - worldPos);
+    vec3 L = normalize(uLightPosition - worldPos);
+    vec3 H = normalize(V + L);
+
+    // Calculate base reflectivity
+    vec3 F0 = vec3(0.04); 
+    F0 = mix(F0, uAlbedo, uMetallic);
+
+    // Cook-Torrance BRDF
+    float NDF = DistributionGGX(N, H, uRoughness);
+    float G = GeometrySmith(N, V, L, uRoughness);
+    vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
+
+    vec3 numerator = NDF * G * F;
+    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
+    vec3 specular = numerator / denominator;
+
+    vec3 kS = F;
+    vec3 kD = vec3(1.0) - kS;
+    kD *= 1.0 - uMetallic;
+
+    float NdotL = max(dot(N, L), 0.0);
+
+    // Final combination
+    vec3 Lo = (kD * uAlbedo / PI + specular) * uLightColor * NdotL;
+
+    // Ambient lighting
+    vec3 ambient = vec3(0.03) * uAlbedo;
+
+    return ambient + Lo;
+}
+
 void main() {
 vec2 uv = vUv - 0.5;
 vec3 ro = vRayOrigin.xyz; //vec3(0., 0., -3.);
@@ -155,6 +230,9 @@ if(d >= MAX_DIST) {
 
 		vec3 p = ro + rd * d;
 		vec3 n = GetNormal(p);
+
+		// Calculate PBR lighting
+		vec3 pbrColor = calculatePBR(p, n);
 
 		// reflection
 		vec3 refl = reflect(rd, n);
@@ -198,14 +276,16 @@ if(d >= MAX_DIST) {
         // fresnel
         float fresnel = pow(1. + dot(rd, n), uReflection);
 
-        col = mix(col, reflOutside, fresnel); 
+        vec3 finalColor = mix(col, reflOutside, fresnel); 
         
-        // color = vec3(fresnel);
-        // color = vec3(refOutside);
-    
-        col = pow(col, vec3(.465));
+        // Blend PBR with your existing refraction/reflection
+        finalColor = mix(finalColor, pbrColor, 0.5); // Adjust mix factor as needed
 
-		gl_FragColor = vec4(col, 1.0);
+        // Apply tone mapping and gamma correction
+        finalColor = finalColor / (finalColor + vec3(1.0));
+        finalColor = pow(finalColor, vec3(1.0/2.2));
+
+		gl_FragColor = vec4(finalColor, 1.0);
 		}
 	}
 

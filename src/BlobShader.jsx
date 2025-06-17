@@ -57,6 +57,9 @@ export default function Shader() {
     dispersion,
     refract,
     chromaticAbberation,
+    metallic,
+    roughness,
+    albedo,
   } = useControls({
     reflection: {
       value: 1.5,
@@ -105,6 +108,22 @@ export default function Shader() {
       min: 0.0,
       max: 5.0,
       step: 0.1,
+    },
+    metallic: {
+      value: 0.5,
+      min: 0.0,
+      max: 1.0,
+      step: 0.01,
+    },
+    roughness: {
+      value: 0.5,
+      min: 0.0,
+      max: 1.0,
+      step: 0.01,
+    },
+    albedo: {
+      value: { r: 0.5, g: 0.5, b: 0.5 },
+      color: true,
     },
   })
 
@@ -157,6 +176,9 @@ export default function Shader() {
     mesh.material.uniforms.uDispersion.value = dispersion
     mesh.material.uniforms.uRefractPower.value = refract
     mesh.material.uniforms.uChromaticAbberation.value = chromaticAbberation
+    mesh.material.uniforms.uMetallic.value = metallic
+    mesh.material.uniforms.uRoughness.value = roughness
+    mesh.material.uniforms.uAlbedo.value.set(albedo.r, albedo.g, albedo.b)
   })
 
   // Create a ref for resolution to avoid recreating Vector2 on every frame
@@ -249,6 +271,26 @@ export default function Shader() {
       uLightPos: {
         type: "v3",
         value: new Vector3(0, 10, 0),
+      },
+      uMetallic: {
+        type: "f",
+        value: 0.5, // Adjust as needed
+      },
+      uRoughness: {
+        type: "f",
+        value: 0.5, // Adjust as needed
+      },
+      uAlbedo: {
+        type: "v3",
+        value: new Vector3(0.5, 0.5, 0.5), // Base color
+      },
+      uLightPosition: {
+        type: "v3",
+        value: new Vector3(5.0, 5.0, 5.0), // Adjust light position
+      },
+      uLightColor: {
+        type: "v3",
+        value: new Vector3(1.0, 1.0, 1.0), // Light color
       },
     }),
     []
